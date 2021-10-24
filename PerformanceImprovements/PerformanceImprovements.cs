@@ -60,6 +60,9 @@ namespace PerformanceImprovements
         public static ConfigEntry<bool> DisableOverheadLightAndShadows;
         public static ConfigEntry<float> ScreenShakeStrength;
         public static ConfigEntry<float> ChromaticAberrationStrength;
+        public static ConfigEntry<bool> DisableOverheadLightShake;
+        public static ConfigEntry<bool> DisableAllParticleAnimations;
+        public static ConfigEntry<float> MaxNumberOfParticles;
 
 
         private void Awake()
@@ -73,6 +76,9 @@ namespace PerformanceImprovements
             DisableOverheadLightAndShadows = Config.Bind(CompatibilityModName, "Disable overhead light and shadows", true);
             ScreenShakeStrength = Config.Bind(CompatibilityModName, "Screen shake strength from 0 to 1", 0f);
             ChromaticAberrationStrength = Config.Bind(CompatibilityModName, "Chromatic Aberration Strength from 0 to 1", 0f);
+            DisableOverheadLightShake = Config.Bind(CompatibilityModName, "Disable overhead light shake", true);
+            DisableAllParticleAnimations = Config.Bind(CompatibilityModName, "Disable all particle animations", true);
+            MaxNumberOfParticles = Config.Bind(CompatibilityModName, "Maximum number of particles per renderer", 1000f);
             // apply patches
             new Harmony(ModId).PatchAll();
         }
@@ -116,6 +122,12 @@ namespace PerformanceImprovements
                 DisableCardParticleAnimations.Value = val;
             }
             MenuHandler.CreateToggle(DisableCardParticleAnimations.Value, "Disable Card Particle Animations", menu, CardPartAnimChanged, 30);
+            void PartAnimChanged(bool val)
+            {
+                DisableAllParticleAnimations.Value = val;
+                CycleArt();
+            }
+            MenuHandler.CreateToggle(DisableAllParticleAnimations.Value, "Disable All Particle Animations", menu, PartAnimChanged, 30);
             void NumPartsChanged(float val)
             {
                 NumberOfGeneralParticles.Value = (int)val;
@@ -124,21 +136,31 @@ namespace PerformanceImprovements
             void SimpleSkinChanged(bool val)
             {
                 DisablePlayerParticles.Value = val;
+                CycleArt();
             }
             MenuHandler.CreateToggle(DisablePlayerParticles.Value, "Use simple player skins", menu, SimpleSkinChanged, 30);
             void MapParticlesChanged(bool val)
             {
                 DisableMapParticles.Value = val;
+                CycleArt();
             }
             MenuHandler.CreateToggle(DisableMapParticles.Value, "Disable Map Particle Effects", menu, MapParticlesChanged, 30);
             void BackParticlesChanged(bool val)
             {
                 DisableBackgroundParticles.Value = val;
+                CycleArt();
             }
             MenuHandler.CreateToggle(DisableBackgroundParticles.Value, "Disable Background Particle Effects", menu, BackParticlesChanged, 30);
+            void LightShakeChanged(bool val)
+            {
+                DisableOverheadLightShake.Value = val;
+                CycleArt();
+            }
+            MenuHandler.CreateToggle(DisableOverheadLightShake.Value, "Disable Overhead light shake", menu, LightShakeChanged, 30);
             void LightChanged(bool val)
             {
                 DisableOverheadLightAndShadows.Value = val;
+                CycleArt();
             }
             MenuHandler.CreateToggle(DisableOverheadLightAndShadows.Value, "Disable Overhead light and shadows", menu, LightChanged, 30);
             void ShakeChanged(float val)
@@ -149,8 +171,20 @@ namespace PerformanceImprovements
             {
                 ChromaticAberrationStrength.Value = val / 100f;
             }
+            void MaxParticlesChanged(float val)
+            {
+                MaxNumberOfParticles.Value = (int)val;
+                CycleArt();
+            }
             MenuHandler.CreateSlider("Screen Shake Strength", menu, 30, 0f, 100f, (int)(100f*ScreenShakeStrength.Value), ShakeChanged, out Slider _, true);
-            MenuHandler.CreateSlider("Chromatic Aberration Strength", menu, 30, 0f, 100f, (int)(100f*ChromaticAberrationStrength.Value), AberrationChanged, out Slider _, true);
+            MenuHandler.CreateSlider("Chromatic Aberration Strength", menu, 30, 0f, 100f, (int)(100f * ChromaticAberrationStrength.Value), AberrationChanged, out Slider _, true);
+            MenuHandler.CreateSlider("Maximum number of particles", menu, 30, 20f, 1000f, MaxNumberOfParticles.Value, MaxParticlesChanged, out Slider _, true);
+        }
+
+        private static void CycleArt()
+        {
+            ArtHandler.instance.NextArt();
+            ArtHandler.instance.NextArt();
         }
 
         private void Screenshaker_OnGameFeel(On.Screenshaker.orig_OnGameFeel orig, global::Screenshaker self, Vector2 feelDirection)

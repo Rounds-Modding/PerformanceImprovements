@@ -4,6 +4,7 @@ using System.Text;
 using HarmonyLib;
 using UnityEngine;
 using UnboundLib;
+using System.Collections;
 
 namespace PerformanceImprovements.Patches
 {
@@ -17,13 +18,36 @@ namespace PerformanceImprovements.Patches
 
 		private static Color staticGunColor = new Color(0.25f, 0.25f, 0.25f, 1f);
 
+		private static IEnumerator PlayForSeconds(ParticleSystem part, float duration, float delay)
+        {
+			yield return new WaitForSecondsRealtime(delay);
+			part?.Play();
+			yield return new WaitForSecondsRealtime(duration);
+			part?.Pause();
+			yield break;
+        }
+
 		private static void Postfix()
 		{
 			foreach (ParticleSystem particleSystem in UnityEngine.Object.FindObjectsOfType<ParticleSystem>())
 			{
+				ParticleSystem.MainModule main = particleSystem.main;
+				main.maxParticles = (int)PerformanceImprovements.MaxNumberOfParticles.Value;
 				if (particleSystem.gameObject.name.Contains("Skin_Player"))
 				{
+					if (!PerformanceImprovements.DisablePlayerParticles.Value)
+					{
+						particleSystem?.Play();
+					}
 					particleSystem.SetPropertyValue("enableEmission", !PerformanceImprovements.DisablePlayerParticles.Value);
+					if (!PerformanceImprovements.DisableAllParticleAnimations.Value || PerformanceImprovements.DisablePlayerParticles.Value)
+                    {
+						particleSystem?.Clear();
+                    }
+					else if (PerformanceImprovements.DisableAllParticleAnimations.Value && !PerformanceImprovements.DisablePlayerParticles.Value)
+                    {
+						Unbound.Instance.StartCoroutine(PlayForSeconds(particleSystem, 0.1f, 0.1f));
+                    }
 
 					Player player = particleSystem.gameObject.GetComponentInParent<Player>();
 					Gun gun = player.GetComponent<Holding>().holdable.GetComponent<Gun>();
@@ -38,26 +62,29 @@ namespace PerformanceImprovements.Patches
 					barrel.GetComponent<SpriteRenderer>().enabled = PerformanceImprovements.DisablePlayerParticles.Value;
 					barrel.GetComponent<SpriteRenderer>().color = staticGunColor;
 				}
+
+				if (PerformanceImprovements.DisableAllParticleAnimations.Value)
+				{
+					particleSystem?.Pause();
+				}
 			}
 			BackParticles?.SetActive(!PerformanceImprovements.DisableBackgroundParticles.Value);
 			FrontParticles?.SetActive(!PerformanceImprovements.DisableMapParticles.Value);
 			Light?.SetActive(!PerformanceImprovements.DisableOverheadLightAndShadows.Value);
-			/*
-			GameObject backgroundpart = GameObject.Find("BackgroudParticles");
-			if (backgroundpart != null)
+			if (Light && Light.GetComponent<Screenshaker>())
 			{
-				backgroundpart.SetActive(!PerformanceImprovements.DisableMapParticles.Value);
+				Light.GetComponentInChildren<Screenshaker>().enabled = !PerformanceImprovements.DisableOverheadLightShake.Value;
 			}
-			GameObject foregroundpart = GameObject.Find("FrontParticles");
-			if (foregroundpart != null)
+			if ((bool)BackParticles?.activeSelf && PerformanceImprovements.DisableAllParticleAnimations.Value)
 			{
-				foregroundpart.SetActive(!PerformanceImprovements.DisableMapParticles.Value);
+				BackParticles?.GetComponent<ParticleSystem>()?.Play();
+				Unbound.Instance.ExecuteAfterFrames(2, () => { BackParticles?.GetComponent<ParticleSystem>()?.Pause(); });
 			}
-			GameObject light = GameObject.Find("Light");
-			if (light != null)
+			if ((bool)FrontParticles?.activeSelf && PerformanceImprovements.DisableAllParticleAnimations.Value)
 			{
-				light.SetActive(!PerformanceImprovements.DisableOverheadLightAndShadows.Value);
-			}*/
+				FrontParticles?.GetComponent<ParticleSystem>()?.Play();
+				Unbound.Instance.ExecuteAfterFrames(2, () => { FrontParticles?.GetComponent<ParticleSystem>()?.Pause(); });
+			}
 		}
 	}
 }
