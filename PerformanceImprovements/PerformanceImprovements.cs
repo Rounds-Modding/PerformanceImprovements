@@ -29,6 +29,8 @@ namespace PerformanceImprovements
         private const string ModName = "Performance Improvements";
         private const string CompatibilityModName = "PerformanceImprovements";
 
+        internal static int hitEffectsSpawnedThisFrame = 0;
+
         private static bool _GameInProgress = false;
         internal static bool GameInProgress
         {
@@ -63,7 +65,12 @@ namespace PerformanceImprovements
         public static ConfigEntry<bool> DisableOverheadLightShake;
         public static ConfigEntry<bool> DisableAllParticleAnimations;
         public static ConfigEntry<float> MaxNumberOfParticles;
-
+        public static ConfigEntry<bool> FixProjectileObjectsToSpawn;
+        public static ConfigEntry<bool> FixBulletHitParticleEffects;
+        public static ConfigEntry<bool> DisableBulletHitSurfaceParticleEffects;
+        public static ConfigEntry<bool> DisableBulletHitBulletParticleEffects;
+        public static ConfigEntry<int> MaximumBulletHitParticlesPerFrame;
+        public static ConfigEntry<bool> RemoveOutOfBoundsBullets;
 
         private void Awake()
         {
@@ -79,6 +86,12 @@ namespace PerformanceImprovements
             DisableOverheadLightShake = Config.Bind(CompatibilityModName, "Disable overhead light shake", true);
             DisableAllParticleAnimations = Config.Bind(CompatibilityModName, "Disable all particle animations", true);
             MaxNumberOfParticles = Config.Bind(CompatibilityModName, "Maximum number of particles per renderer", 1000f);
+            FixProjectileObjectsToSpawn = Config.Bind(CompatibilityModName, "Fix projectile ObjectsToSpawn", true);
+            FixBulletHitParticleEffects = Config.Bind(CompatibilityModName, "Fix BulletHit particle effects", true);
+            DisableBulletHitSurfaceParticleEffects = Config.Bind(CompatibilityModName, "Disable BulletHitSurface particle effects", true);
+            DisableBulletHitBulletParticleEffects = Config.Bind(CompatibilityModName, "Disable BulletHitBullet particle effects", true);
+            MaximumBulletHitParticlesPerFrame = Config.Bind(CompatibilityModName, "Maximum BulletHit particles per frame", 100);
+            RemoveOutOfBoundsBullets = Config.Bind(CompatibilityModName, "Remove out of bounds bullets", true);
             // apply patches
             new Harmony(ModId).PatchAll();
         }
@@ -97,6 +110,7 @@ namespace PerformanceImprovements
             Unbound.RegisterClientSideMod(ModId);
 
             GameModeManager.AddHook(GameModeHooks.HookGameStart, (gm) => SetGameInProgress(true));
+            GameModeManager.AddHook(GameModeHooks.HookPointEnd, RemoveAfterPoint);
 
             // reset GameInProgress
             On.MainMenuHandler.Awake += (orig, self) =>
@@ -109,6 +123,12 @@ namespace PerformanceImprovements
             On.Screenshaker.OnGameFeel += this.Screenshaker_OnGameFeel;
             On.ChomaticAberrationFeeler.OnGameFeel += this.ChomaticAberrationFeeler_OnGameFeel;
         }
+
+        void LateUpdate()
+        {
+            hitEffectsSpawnedThisFrame = 0;
+        }
+
         private static IEnumerator SetGameInProgress(bool inProgress)
         {
             PerformanceImprovements.GameInProgress = inProgress;
@@ -179,6 +199,36 @@ namespace PerformanceImprovements
             MenuHandler.CreateSlider("Screen Shake Strength", menu, 30, 0f, 100f, (int)(100f*ScreenShakeStrength.Value), ShakeChanged, out Slider _, true);
             MenuHandler.CreateSlider("Chromatic Aberration Strength", menu, 30, 0f, 100f, (int)(100f * ChromaticAberrationStrength.Value), AberrationChanged, out Slider _, true);
             MenuHandler.CreateSlider("Maximum number of particles", menu, 30, 20f, 1000f, MaxNumberOfParticles.Value, MaxParticlesChanged, out Slider _, true);
+            void FixObjToSpawnChanged(bool val)
+            {
+                FixProjectileObjectsToSpawn.Value = val;
+            }
+            MenuHandler.CreateToggle(FixProjectileObjectsToSpawn.Value, "Fix persistance issues with Projectile.ObjectsToSpawn", menu, FixObjToSpawnChanged, 30);
+            void FixBulletHitChanged(bool val)
+            {
+                FixBulletHitParticleEffects.Value = val;
+            }
+            MenuHandler.CreateToggle(FixBulletHitParticleEffects.Value, "Fix persistance issues with BulletHit particle effects", menu, FixBulletHitChanged, 30);
+            void DisableBulletHitChanged(bool val)
+            {
+                DisableBulletHitSurfaceParticleEffects.Value = val;
+            }
+            MenuHandler.CreateToggle(DisableBulletHitSurfaceParticleEffects.Value, "Disable BulletHitSurface particle effects", menu, DisableBulletHitChanged, 30);
+            void DisableBulletHitBulletChanged(bool val)
+            {
+                DisableBulletHitBulletParticleEffects.Value = val;
+            }
+            MenuHandler.CreateToggle(DisableBulletHitBulletParticleEffects.Value, "Disable BulletHitBullet particle effects", menu, DisableBulletHitBulletChanged, 30);
+            void MaxBulletHitChanged(float val)
+            {
+                MaximumBulletHitParticlesPerFrame.Value = (int)val;
+            }
+            MenuHandler.CreateSlider("Global maximum number of bullethit particles per frame", menu, 30, 0f, 100f, (float)MaximumBulletHitParticlesPerFrame.Value, MaxBulletHitChanged, out Slider _, true);
+            void RemoveOOBChanged(bool val)
+            {
+                RemoveOutOfBoundsBullets.Value = val;
+            }
+            MenuHandler.CreateToggle(RemoveOutOfBoundsBullets.Value, "Remove out of bounds bullets", menu, RemoveOOBChanged, 30);
         }
 
         private static void CycleArt()
@@ -195,6 +245,16 @@ namespace PerformanceImprovements
         private void ChomaticAberrationFeeler_OnGameFeel(On.ChomaticAberrationFeeler.orig_OnGameFeel orig, global::ChomaticAberrationFeeler self, Vector2 feelDirection)
         {
             orig(self, feelDirection * (float)(ChromaticAberrationStrength.Value));
+        }
+
+        private static IEnumerator RemoveAfterPoint(IGameModeHandler gm)
+        {
+            foreach (UnityEngine.Object obj in Resources.FindObjectsOfTypeAll(typeof(RemoveAfterPoint)))
+            {
+                if (obj != null) { UnityEngine.GameObject.Destroy(obj); }
+            }
+
+            yield break;
         }
     }
 }

@@ -7,11 +7,20 @@ namespace PerformanceImprovements.Patches
     [HarmonyPatch(typeof(RayHitBulletSound), "DoHitEffect")]
     class RayHitBulletSoundPatchDoHitEffect
     {
-        static void Finalizer(RayHitBulletSound __instance, Exception __exception)
+        private static void TryDestroy(RayHitBulletSound __instance)
+        {
+            if (__instance != null && __instance.gameObject != null) { UnityEngine.GameObject.Destroy(__instance.gameObject); }
+        }
+        static Exception Finalizer(RayHitBulletSound __instance, Exception __exception)
         {
             if (__exception is NullReferenceException)
             {
-                UnityEngine.GameObject.Destroy(__instance.gameObject);
+                TryDestroy(__instance);
+                return null;
+            }
+            else
+            {
+                return __exception;
             }
         }
     }
