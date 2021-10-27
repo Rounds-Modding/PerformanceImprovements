@@ -13,7 +13,7 @@ namespace PerformanceImprovements.Patches
     {
         private static void Postfix(ParticleSystem ___part)
         {
-            if (PerformanceImprovements.DisableAllParticleAnimations.Value)
+            if (PerformanceImprovements.DisablePlayerParticleAnimations.Value)
             {
                 ___part?.Pause();
             }
@@ -24,7 +24,7 @@ namespace PerformanceImprovements.Patches
     {
         private static void Postfix(ParticleSystem ___part)
         {
-            if (PerformanceImprovements.DisableAllParticleAnimations.Value)
+            if (PerformanceImprovements.DisablePlayerParticleAnimations.Value)
             {
                 ___part?.Pause();
             }
@@ -36,7 +36,7 @@ namespace PerformanceImprovements.Patches
         private static void Prefix(ParticleSystem ___part, ref ParticleSystem.Particle[] ___particles, Color blinkColor)
         {
 
-            if (PerformanceImprovements.DisableAllParticleAnimations.Value)
+            if (PerformanceImprovements.DisablePlayerParticleAnimations.Value)
             {
 
                 ___particles = new ParticleSystem.Particle[___part.main.maxParticles];

@@ -40,11 +40,11 @@ namespace PerformanceImprovements.Patches
 						particleSystem?.Play();
 					}
 					particleSystem.SetPropertyValue("enableEmission", !PerformanceImprovements.DisablePlayerParticles.Value);
-					if (!PerformanceImprovements.DisableAllParticleAnimations.Value || PerformanceImprovements.DisablePlayerParticles.Value)
+					if (!PerformanceImprovements.DisablePlayerParticleAnimations.Value || PerformanceImprovements.DisablePlayerParticles.Value)
                     {
 						particleSystem?.Clear();
                     }
-					else if (PerformanceImprovements.DisableAllParticleAnimations.Value && !PerformanceImprovements.DisablePlayerParticles.Value)
+					else if (PerformanceImprovements.DisablePlayerParticleAnimations.Value && !PerformanceImprovements.DisablePlayerParticles.Value)
                     {
 						Unbound.Instance.StartCoroutine(PlayForSeconds(particleSystem, 0.1f, 0.1f));
                     }
@@ -63,7 +63,7 @@ namespace PerformanceImprovements.Patches
 					barrel.GetComponent<SpriteRenderer>().color = staticGunColor;
 				}
 
-				if (PerformanceImprovements.DisableAllParticleAnimations.Value)
+				else if (PerformanceImprovements.DisableMapAndUIParticleAnimations.Value)
 				{
 					particleSystem?.Pause();
 				}
@@ -75,12 +75,12 @@ namespace PerformanceImprovements.Patches
 			{
 				Light.GetComponentInChildren<Screenshaker>().enabled = !PerformanceImprovements.DisableOverheadLightShake.Value;
 			}
-			if ((bool)BackParticles?.activeSelf && PerformanceImprovements.DisableAllParticleAnimations.Value)
+			if ((bool)BackParticles?.activeSelf && PerformanceImprovements.DisableMapAndUIParticleAnimations.Value)
 			{
 				BackParticles?.GetComponent<ParticleSystem>()?.Play();
 				Unbound.Instance.ExecuteAfterFrames(2, () => { BackParticles?.GetComponent<ParticleSystem>()?.Pause(); });
 			}
-			if ((bool)FrontParticles?.activeSelf && PerformanceImprovements.DisableAllParticleAnimations.Value)
+			if ((bool)FrontParticles?.activeSelf && PerformanceImprovements.DisableMapAndUIParticleAnimations.Value)
 			{
 				FrontParticles?.GetComponent<ParticleSystem>()?.Play();
 				Unbound.Instance.ExecuteAfterFrames(2, () => { FrontParticles?.GetComponent<ParticleSystem>()?.Pause(); });
