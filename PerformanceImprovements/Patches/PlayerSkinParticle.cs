@@ -2,64 +2,80 @@
 using HarmonyLib;
 using UnityEngine;
 using UnboundLib;
-using PerformanceImprovements.Utils;
 using System.Collections;
 using System.Linq;
+using PerformanceImprovements.Utils;
 
 namespace PerformanceImprovements.Patches
 {
     [HarmonyPatch(typeof(PlayerSkinParticle), "Init")]
     class PlayerSkinParticlePatchInit
     {
-        private static void Postfix(ParticleSystem ___part)
+        private static void Postfix(PlayerSkinParticle __instance, ParticleSystem ___part)
         {
-            if (PerformanceImprovements.DisablePlayerParticleAnimations.Value)
+            if (___part != null)
             {
-                ___part?.Pause();
+                ___part.enableEmission = !PerformanceImprovements.DisablePlayerParticles.Value;
+            }
+            if (__instance != null)
+            {
+                Gun gun = __instance.transform.parent.GetComponentInParent<Player>().GetComponent<Holding>().holdable.GetComponent<Gun>();
+                GameObject spring = gun.gameObject.transform.GetChild(1).gameObject;
+                GameObject handle = spring.transform.GetChild(2).gameObject;
+                GameObject barrel = spring.transform.GetChild(3).gameObject;
+
+                handle.GetComponent<SpriteMask>().enabled = !PerformanceImprovements.DisablePlayerParticles.Value;
+                handle.GetComponent<SpriteRenderer>().enabled = PerformanceImprovements.DisablePlayerParticles.Value;
+                handle.GetComponent<SpriteRenderer>().color = PerformanceImprovements.staticGunColor;
+                barrel.GetComponent<SpriteMask>().enabled = !PerformanceImprovements.DisablePlayerParticles.Value;
+                barrel.GetComponent<SpriteRenderer>().enabled = PerformanceImprovements.DisablePlayerParticles.Value;
+                barrel.GetComponent<SpriteRenderer>().color = PerformanceImprovements.staticGunColor;
             }
         }
     }
     [HarmonyPatch(typeof(PlayerSkinParticle), "OnEnable")]
     class PlayerSkinParticlePatchOnEnable
     {
-        private static void Postfix(ParticleSystem ___part)
+        private static void Postfix(PlayerSkinParticle __instance, ParticleSystem ___part)
         {
-            if (PerformanceImprovements.DisablePlayerParticleAnimations.Value)
+            if (___part != null) 
+            { 
+                ___part.enableEmission = !PerformanceImprovements.DisablePlayerParticles.Value;
+            }
+            if (__instance != null)
             {
-                ___part?.Pause();
+                Gun gun = __instance.transform.parent.GetComponentInParent<Player>().GetComponent<Holding>().holdable.GetComponent<Gun>();
+                GameObject spring = gun.gameObject.transform.GetChild(1).gameObject;
+                GameObject handle = spring.transform.GetChild(2).gameObject;
+                GameObject barrel = spring.transform.GetChild(3).gameObject;
+
+                handle.GetComponent<SpriteMask>().enabled = !PerformanceImprovements.DisablePlayerParticles.Value;
+                handle.GetComponent<SpriteRenderer>().enabled = PerformanceImprovements.DisablePlayerParticles.Value;
+                handle.GetComponent<SpriteRenderer>().color = PerformanceImprovements.staticGunColor;
+                barrel.GetComponent<SpriteMask>().enabled = !PerformanceImprovements.DisablePlayerParticles.Value;
+                barrel.GetComponent<SpriteRenderer>().enabled = PerformanceImprovements.DisablePlayerParticles.Value;
+                barrel.GetComponent<SpriteRenderer>().color = PerformanceImprovements.staticGunColor;
             }
         }
     }
     [HarmonyPatch(typeof(PlayerSkinParticle), "BlinkColor")]
     class PlayerSkinParticlePatchBlinkColor
     {
-        private static void Prefix(ParticleSystem ___part, ref ParticleSystem.Particle[] ___particles, Color blinkColor)
+
+        private const float blinkTime = 0.2f;
+        private static bool Prefix(PlayerSkinParticle __instance, Color blinkColor)
         {
 
-            if (PerformanceImprovements.DisablePlayerParticleAnimations.Value)
+            if (PerformanceImprovements.DisablePlayerParticles.Value)
             {
-
-                ___particles = new ParticleSystem.Particle[___part.main.maxParticles];
-                int num = ___part.GetParticles(___particles);
-
-                Unbound.Instance.StartCoroutine(RestorePartsAndPause(___particles.Select(p => p.GetCurrentColor(___part)).ToArray(), ___part, ___particles, 0.1f));
-
+                ColorFlash effect = __instance.transform.parent.GetComponentInParent<Player>().gameObject.AddComponent<ColorFlash>();
+                effect.SetColor(blinkColor);
+                effect.SetNumberOfFlashes(1);
+                effect.SetDuration(blinkTime);
             }
 
-        }
+            return !PerformanceImprovements.DisablePlayerParticles.Value;
 
-        private static IEnumerator RestorePartsAndPause(Color32[] colors, ParticleSystem part, ParticleSystem.Particle[] particles, float delay)
-        {
-            yield return new WaitForSecondsRealtime(delay);
-
-            int num = particles.Length;
-            for (int i = 0; i < num; i++)
-            {
-                particles[i].startColor = colors[i];
-            }
-            part.SetParticles(particles, num);
-            part.Pause();
-            yield break;
         }
     }
 }

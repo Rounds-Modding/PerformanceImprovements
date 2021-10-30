@@ -60,5 +60,5 @@ namespace PerformanceImprovements.Utils
             return player.gameObject.GetComponentInChildren<SetPlayerSpriteLayer>().transform.root.GetComponentInChildren<SpriteMask>().GetComponent<SpriteRenderer>().color;
         }
     }
-    
+
 }

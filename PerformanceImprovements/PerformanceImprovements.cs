@@ -31,6 +31,8 @@ namespace PerformanceImprovements
 
         internal static int hitEffectsSpawnedThisFrame = 0;
 
+        internal static Color staticGunColor = new Color(0.25f, 0.25f, 0.25f, 1f);
+
         private static bool _GameInProgress = false;
         internal static bool GameInProgress
         {
@@ -63,8 +65,8 @@ namespace PerformanceImprovements
         public static ConfigEntry<float> ScreenShakeStrength;
         public static ConfigEntry<float> ChromaticAberrationStrength;
         public static ConfigEntry<bool> DisableOverheadLightShake;
-        public static ConfigEntry<bool> DisableMapAndUIParticleAnimations;
-        public static ConfigEntry<bool> DisablePlayerParticleAnimations;
+        public static ConfigEntry<bool> DisableBackgroundParticleAnimations;
+        public static ConfigEntry<bool> DisableForegroundParticleAnimations;
         public static ConfigEntry<float> MaxNumberOfParticles;
         public static ConfigEntry<bool> FixProjectileObjectsToSpawn;
         public static ConfigEntry<bool> FixBulletHitParticleEffects;
@@ -72,6 +74,12 @@ namespace PerformanceImprovements
         public static ConfigEntry<bool> DisableBulletHitBulletParticleEffects;
         public static ConfigEntry<int> MaximumBulletHitParticlesPerFrame;
         public static ConfigEntry<bool> RemoveOutOfBoundsBullets;
+
+        public static PerformanceImprovements instance;
+        private PerformanceImprovements()
+        {
+            instance = this;
+        }
 
         private void Awake()
         {
@@ -85,8 +93,8 @@ namespace PerformanceImprovements
             ScreenShakeStrength = Config.Bind(CompatibilityModName, "Screen shake strength from 0 to 1", 0f);
             ChromaticAberrationStrength = Config.Bind(CompatibilityModName, "Chromatic Aberration Strength from 0 to 1", 0f);
             DisableOverheadLightShake = Config.Bind(CompatibilityModName, "Disable overhead light shake", true);
-            DisableMapAndUIParticleAnimations = Config.Bind(CompatibilityModName, "Disable map and UI particle animations", true);
-            DisablePlayerParticleAnimations = Config.Bind(CompatibilityModName, "Disable player particle animations", true);
+            DisableBackgroundParticleAnimations = Config.Bind(CompatibilityModName, "Disable background particle animations", true);
+            DisableForegroundParticleAnimations = Config.Bind(CompatibilityModName, "Disable foreground particle animations", true);
             MaxNumberOfParticles = Config.Bind(CompatibilityModName, "Maximum number of particles per renderer", 1000f);
             FixProjectileObjectsToSpawn = Config.Bind(CompatibilityModName, "Fix projectile ObjectsToSpawn", true);
             FixBulletHitParticleEffects = Config.Bind(CompatibilityModName, "Fix BulletHit particle effects", true);
@@ -144,18 +152,18 @@ namespace PerformanceImprovements
                 DisableCardParticleAnimations.Value = val;
             }
             MenuHandler.CreateToggle(DisableCardParticleAnimations.Value, "Disable Card Particle Animations", menu, CardPartAnimChanged, 30);
-            void PartAnimChanged(bool val)
+            void BackPartAnimChanged(bool val)
             {
-                DisableMapAndUIParticleAnimations.Value = val;
+                DisableBackgroundParticleAnimations.Value = val;
                 CycleArt();
             }
-            MenuHandler.CreateToggle(DisableMapAndUIParticleAnimations.Value, "Disable Map and UI Particle Animations", menu, PartAnimChanged, 30);
-            void PlayerAnimChanged(bool val)
+            MenuHandler.CreateToggle(DisableBackgroundParticleAnimations.Value, "Disable Background Particle Animations", menu, BackPartAnimChanged, 30);
+            void ForePartAnimChanged(bool val)
             {
-                DisablePlayerParticleAnimations.Value = val;
+                DisableForegroundParticleAnimations.Value = val;
                 CycleArt();
             }
-            MenuHandler.CreateToggle(DisablePlayerParticleAnimations.Value, "Disable Player Particle Animations", menu, PlayerAnimChanged, 30);
+            MenuHandler.CreateToggle(DisableForegroundParticleAnimations.Value, "Disable Foreground Particle Animations", menu, ForePartAnimChanged, 30);
             void NumPartsChanged(float val)
             {
                 NumberOfGeneralParticles.Value = (int)val;

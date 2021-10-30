@@ -5,25 +5,38 @@ using HarmonyLib;
 using UnityEngine;
 using UnboundLib;
 using System.Collections;
+using System.Linq;
 
 namespace PerformanceImprovements.Patches
 {
 	[HarmonyPatch(typeof(ArtHandler), "NextArt")]
 	internal class ArtHandler_Patch
 	{
+		private const int defaultParticles = 150;
+		private const float defaultSimulationTime = 1.5f;
+
 		private static GameObject Rendering => GameObject.Find("/Game/Visual/Rendering ");
 		private static GameObject FrontParticles => Rendering?.transform?.GetChild(1)?.gameObject;
 		private static GameObject BackParticles => Rendering?.transform?.GetChild(0)?.gameObject;
 		private static GameObject Light => Rendering?.transform?.GetChild(3)?.GetChild(0)?.gameObject;
 
-		private static Color staticGunColor = new Color(0.25f, 0.25f, 0.25f, 1f);
+		private static IEnumerator InitParticles(ParticleSystem[] parts, int particles = defaultParticles)
+		{
+			foreach(ParticleSystem part in parts.Where(p => (bool)p?.gameObject?.activeSelf))
+            {
+				yield return InitParticles(part, particles);
+            }
+			yield break;
+		}
 
-		private static IEnumerator PlayForSeconds(ParticleSystem part, float duration, float delay)
+		private static IEnumerator InitParticles(ParticleSystem part, int particles = defaultParticles)
         {
-			yield return new WaitForSecondsRealtime(delay);
-			part?.Play();
-			yield return new WaitForSecondsRealtime(duration);
-			part?.Pause();
+			if (part == null) { yield break; }
+			part.Clear();
+			yield return new WaitForEndOfFrame();
+			part.Simulate(defaultSimulationTime);
+			yield return new WaitForEndOfFrame();
+			part.Pause();
 			yield break;
         }
 
@@ -33,40 +46,24 @@ namespace PerformanceImprovements.Patches
 			{
 				ParticleSystem.MainModule main = particleSystem.main;
 				main.maxParticles = (int)PerformanceImprovements.MaxNumberOfParticles.Value;
-				if (particleSystem.gameObject.name.Contains("Skin_Player"))
-				{
-					if (!PerformanceImprovements.DisablePlayerParticles.Value)
-					{
-						particleSystem?.Play();
-					}
-					particleSystem.SetPropertyValue("enableEmission", !PerformanceImprovements.DisablePlayerParticles.Value);
-					if (!PerformanceImprovements.DisablePlayerParticleAnimations.Value || PerformanceImprovements.DisablePlayerParticles.Value)
-                    {
-						particleSystem?.Clear();
-                    }
-					else if (PerformanceImprovements.DisablePlayerParticleAnimations.Value && !PerformanceImprovements.DisablePlayerParticles.Value)
-                    {
-						Unbound.Instance.StartCoroutine(PlayForSeconds(particleSystem, 0.1f, 0.1f));
-                    }
+			}
+			foreach (Player player in PlayerManager.instance.players)
+            {
 
-					Player player = particleSystem.gameObject.GetComponentInParent<Player>();
-					Gun gun = player.GetComponent<Holding>().holdable.GetComponent<Gun>();
-					GameObject spring = gun.gameObject.transform.GetChild(1).gameObject;
-					GameObject handle = spring.transform.GetChild(2).gameObject;
-					GameObject barrel = spring.transform.GetChild(3).gameObject;
+				((ParticleSystem)player.gameObject.GetComponentInChildren<PlayerSkinParticle>().GetFieldValue("part")).enableEmission = !PerformanceImprovements.DisablePlayerParticles.Value;
 
-					handle.GetComponent<SpriteMask>().enabled = !PerformanceImprovements.DisablePlayerParticles.Value;
-					handle.GetComponent<SpriteRenderer>().enabled = PerformanceImprovements.DisablePlayerParticles.Value;
-					handle.GetComponent<SpriteRenderer>().color = staticGunColor;
-					barrel.GetComponent<SpriteMask>().enabled = !PerformanceImprovements.DisablePlayerParticles.Value;
-					barrel.GetComponent<SpriteRenderer>().enabled = PerformanceImprovements.DisablePlayerParticles.Value;
-					barrel.GetComponent<SpriteRenderer>().color = staticGunColor;
-				}
+				Gun gun = player.GetComponent<Holding>().holdable.GetComponent<Gun>();
+				GameObject spring = gun.gameObject.transform.GetChild(1).gameObject;
+				GameObject handle = spring.transform.GetChild(2).gameObject;
+				GameObject barrel = spring.transform.GetChild(3).gameObject;
 
-				else if (PerformanceImprovements.DisableMapAndUIParticleAnimations.Value)
-				{
-					particleSystem?.Pause();
-				}
+				handle.GetComponent<SpriteMask>().enabled = !PerformanceImprovements.DisablePlayerParticles.Value;
+				handle.GetComponent<SpriteRenderer>().enabled = PerformanceImprovements.DisablePlayerParticles.Value;
+				handle.GetComponent<SpriteRenderer>().color = PerformanceImprovements.staticGunColor;
+				barrel.GetComponent<SpriteMask>().enabled = !PerformanceImprovements.DisablePlayerParticles.Value;
+				barrel.GetComponent<SpriteRenderer>().enabled = PerformanceImprovements.DisablePlayerParticles.Value;
+				barrel.GetComponent<SpriteRenderer>().color = PerformanceImprovements.staticGunColor;
+
 			}
 			BackParticles?.SetActive(!PerformanceImprovements.DisableBackgroundParticles.Value);
 			FrontParticles?.SetActive(!PerformanceImprovements.DisableMapParticles.Value);
@@ -75,15 +72,13 @@ namespace PerformanceImprovements.Patches
 			{
 				Light.GetComponentInChildren<Screenshaker>().enabled = !PerformanceImprovements.DisableOverheadLightShake.Value;
 			}
-			if ((bool)BackParticles?.activeSelf && PerformanceImprovements.DisableMapAndUIParticleAnimations.Value)
+			if ((bool)BackParticles?.activeSelf && PerformanceImprovements.DisableBackgroundParticleAnimations.Value)
 			{
-				BackParticles?.GetComponent<ParticleSystem>()?.Play();
-				Unbound.Instance.ExecuteAfterFrames(2, () => { BackParticles?.GetComponent<ParticleSystem>()?.Pause(); });
+				PerformanceImprovements.instance.StartCoroutine(InitParticles(BackParticles?.GetComponentsInChildren<ParticleSystem>()));
 			}
-			if ((bool)FrontParticles?.activeSelf && PerformanceImprovements.DisableMapAndUIParticleAnimations.Value)
+			if ((bool)FrontParticles?.activeSelf && PerformanceImprovements.DisableForegroundParticleAnimations.Value)
 			{
-				FrontParticles?.GetComponent<ParticleSystem>()?.Play();
-				Unbound.Instance.ExecuteAfterFrames(2, () => { FrontParticles?.GetComponent<ParticleSystem>()?.Pause(); });
+				PerformanceImprovements.instance.StartCoroutine(InitParticles(FrontParticles?.GetComponentsInChildren<ParticleSystem>()));
 			}
 		}
 	}
