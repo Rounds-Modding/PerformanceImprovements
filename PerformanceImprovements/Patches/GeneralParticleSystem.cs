@@ -6,6 +6,7 @@ using UnboundLib;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 namespace PerformanceImprovements.Patches
 {
@@ -19,10 +20,10 @@ namespace PerformanceImprovements.Patches
 
         private static bool Prefix(GeneralParticleSystem __instance)
         {
-            if (PerformanceImprovements.DisableCardParticleAnimations.Value && PerformanceImprovements.GameInProgress)
+            if (PerformanceImprovements.DisableCardParticleAnimations.Value && PerformanceImprovements.GameInProgress && __instance?.gameObject?.transform?.parent?.GetComponentInChildren<TextMeshProUGUI>() == null)
             {
                 __instance.InvokeMethod("Init", new object[] { });
-				int num = (int)UnityEngine.Mathf.Clamp(6, 0, PerformanceImprovements.NumberOfGeneralParticles.Value);
+				int num = (int)UnityEngine.Mathf.Clamp(15, 0, PerformanceImprovements.NumberOfGeneralParticles.Value);
 				for (int i = 0; i < num; i++)
                 {
 					CreateParticleStatic(__instance, i/__instance.duration);
@@ -81,9 +82,9 @@ namespace PerformanceImprovements.Patches
 			spawned.transform.Rotate(instance.transform.forward * instance.particleSettings.rotation);
 			spawned.transform.Rotate(instance.transform.forward * UnityEngine.Random.Range(-staticRandomRotation, staticRandomRotation));
 			spawned.transform.localPosition = Vector3.zero;
-			spawned.transform.position += instance.transform.up * UnityEngine.Random.Range(-staticRandomYPos, staticRandomYPos);
-			spawned.transform.position += instance.transform.right * UnityEngine.Random.Range(-staticRandomXPos, staticRandomXPos);
-			spawned.transform.position += instance.transform.forward * UnityEngine.Random.Range(-0.1f, 0.1f);
+			//spawned.transform.position += instance.transform.up * UnityEngine.Random.Range(-staticRandomYPos, staticRandomYPos);
+			//spawned.transform.position += instance.transform.right * UnityEngine.Random.Range(-staticRandomXPos, staticRandomXPos);
+			//spawned.transform.position += instance.transform.forward * UnityEngine.Random.Range(-0.1f, 0.1f);
 			spawned.transform.localPosition += instance.transform.up * UnityEngine.Random.Range(-staticRandomYPos, staticRandomYPos);
 			spawned.transform.localPosition += instance.transform.right * UnityEngine.Random.Range(-staticRandomXPos, staticRandomXPos);
 			spawned.transform.localPosition += instance.transform.forward * UnityEngine.Random.Range(-0.1f, 0.1f);

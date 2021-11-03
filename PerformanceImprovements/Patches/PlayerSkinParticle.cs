@@ -44,7 +44,8 @@ namespace PerformanceImprovements.Patches
             }
             if (__instance != null)
             {
-                Gun gun = __instance.transform.parent.GetComponentInParent<Player>().GetComponent<Holding>().holdable.GetComponent<Gun>();
+                Gun gun = __instance?.transform?.parent?.GetComponentInParent<Player>()?.GetComponent<Holding>()?.holdable?.GetComponent<Gun>();
+                if (gun == null) { return; }
                 GameObject spring = gun.gameObject.transform.GetChild(1).gameObject;
                 GameObject handle = spring.transform.GetChild(2).gameObject;
                 GameObject barrel = spring.transform.GetChild(3).gameObject;
