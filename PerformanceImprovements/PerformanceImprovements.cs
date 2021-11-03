@@ -25,7 +25,7 @@ namespace PerformanceImprovements
     [BepInProcess("Rounds.exe")]
     public class PerformanceImprovements : BaseUnityPlugin
     {
-        private const string ModId = "pykess-and-ascyst.rounds.plugins.performanceimprovements";
+        private const string ModId = "pykess.rounds.plugins.performanceimprovements";
         internal const string ModName = "Performance Improvements";
         private const string CompatibilityModName = "PerformanceImprovements";
 
