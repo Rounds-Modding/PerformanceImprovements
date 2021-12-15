@@ -21,7 +21,7 @@ using PerformanceImprovements.Patches;
 namespace PerformanceImprovements
 {
     [BepInDependency("com.willis.rounds.unbound", BepInDependency.DependencyFlags.HardDependency)]
-    [BepInPlugin(ModId, ModName, "0.0.0")]
+    [BepInPlugin(ModId, ModName, "0.0.1")]
     [BepInProcess("Rounds.exe")]
     public class PerformanceImprovements : BaseUnityPlugin
     {
@@ -35,6 +35,14 @@ namespace PerformanceImprovements
 
         private static Color easyChangeColor = new Color(0.521f, 1f, 0.521f, 1f);
         private static Color hardChangeColor = new Color(1f, 0.521f, 0.521f, 1f);
+
+        private float PostFXDampening = 1f;
+        private const float mapTransitionExtraDelay = 0.5f;
+        private const float postFXRampDuration = 1f;
+
+        internal Coroutine dampenPostFXCO = null;
+
+        private static bool BattleInProgress = false;
 
         private static bool _GameInProgress = false;
         internal static bool GameInProgress
@@ -71,6 +79,7 @@ namespace PerformanceImprovements
         public static ConfigEntry<int> MaxNumberOfParticles;
         public static ConfigEntry<bool> FixProjectileObjectsToSpawn;
         public static ConfigEntry<bool> FixBulletHitParticleEffects;
+        public static ConfigEntry<bool> FixMapLoadLag;
         public static ConfigEntry<bool> DisableBulletHitSurfaceParticleEffects;
         public static ConfigEntry<bool> DisableBulletHitBulletParticleEffects;
         public static ConfigEntry<int> MaximumBulletHitParticlesPerFrame;
@@ -83,6 +92,22 @@ namespace PerformanceImprovements
         private PerformanceImprovements()
         {
             instance = this;
+        }
+        private float ScreenShakeValue
+        {
+            get
+            {
+                return PerformanceImprovements.ScreenShakeStrength.Value * this.PostFXDampening;
+            }
+            set { }
+        }
+        private float AberrationValue
+        {
+            get
+            {
+                return PerformanceImprovements.ChromaticAberrationStrength.Value * this.PostFXDampening;
+            }
+            set { }
         }
 
         private void Awake()
@@ -102,6 +127,7 @@ namespace PerformanceImprovements
             MaxNumberOfParticles = Config.Bind(CompatibilityModName, "Maximum number of particles per renderer", 300);
             FixProjectileObjectsToSpawn = Config.Bind(CompatibilityModName, "Fix projectile ObjectsToSpawn", true);
             FixBulletHitParticleEffects = Config.Bind(CompatibilityModName, "Fix BulletHit particle effects", true);
+            FixMapLoadLag = Config.Bind(CompatibilityModName, "Fix lag when maps first load", true);
             DisableBulletHitSurfaceParticleEffects = Config.Bind(CompatibilityModName, "Disable BulletHitSurface particle effects", false);
             DisableBulletHitBulletParticleEffects = Config.Bind(CompatibilityModName, "Disable BulletHitBullet particle effects", false);
             MaximumBulletHitParticlesPerFrame = Config.Bind(CompatibilityModName, "Maximum BulletHit particles per frame", 5);
@@ -125,6 +151,8 @@ namespace PerformanceImprovements
 
             GameModeManager.AddHook(GameModeHooks.HookGameStart, (gm) => SetGameInProgress(true));
             GameModeManager.AddHook(GameModeHooks.HookPointEnd, RemoveAfterPoint);
+            GameModeManager.AddHook(GameModeHooks.HookPointEnd, (gm) => SetBattleInProgress(false));
+            GameModeManager.AddHook(GameModeHooks.HookBattleStart, (gm) => SetBattleInProgress(true));
 
             // reset GameInProgress
             On.MainMenuHandler.Awake += (orig, self) =>
@@ -142,9 +170,14 @@ namespace PerformanceImprovements
         {
             hitEffectsSpawnedThisFrame = 0;
         }
-
+        private static IEnumerator SetBattleInProgress(bool inProgress)
+        {
+            PerformanceImprovements.BattleInProgress = inProgress;
+            yield break;
+        }
         private static IEnumerator SetGameInProgress(bool inProgress)
         {
+            if (inProgress) { PerformanceImprovements.instance.PostFXDampening = 1f; }
             PerformanceImprovements.GameInProgress = inProgress;
             yield break;
         }
@@ -165,6 +198,7 @@ namespace PerformanceImprovements
             MaxNumberOfParticles.Value = 1000;
             FixProjectileObjectsToSpawn.Value = false;
             FixBulletHitParticleEffects.Value = false;
+            FixMapLoadLag.Value = false;
             DisableBulletHitSurfaceParticleEffects.Value = false;
             DisableBulletHitBulletParticleEffects.Value = false;
             MaximumBulletHitParticlesPerFrame.Value = 100;
@@ -188,6 +222,7 @@ namespace PerformanceImprovements
             MaxNumberOfParticles.Value = 1000;
             FixProjectileObjectsToSpawn.Value = true;
             FixBulletHitParticleEffects.Value = true;
+            FixMapLoadLag.Value = true;
             DisableBulletHitSurfaceParticleEffects.Value = false;
             DisableBulletHitBulletParticleEffects.Value = false;
             MaximumBulletHitParticlesPerFrame.Value = 100;
@@ -211,6 +246,7 @@ namespace PerformanceImprovements
             MaxNumberOfParticles.Value = 500;
             FixProjectileObjectsToSpawn.Value = true;
             FixBulletHitParticleEffects.Value = true;
+            FixMapLoadLag.Value = true;
             DisableBulletHitSurfaceParticleEffects.Value = false;
             DisableBulletHitBulletParticleEffects.Value = false;
             MaximumBulletHitParticlesPerFrame.Value = 10;
@@ -234,6 +270,7 @@ namespace PerformanceImprovements
             MaxNumberOfParticles.Value = 300;
             FixProjectileObjectsToSpawn.Value = true;
             FixBulletHitParticleEffects.Value = true;
+            FixMapLoadLag.Value = true;
             DisableBulletHitSurfaceParticleEffects.Value = false;
             DisableBulletHitBulletParticleEffects.Value = false;
             MaximumBulletHitParticlesPerFrame.Value = 5;
@@ -257,6 +294,7 @@ namespace PerformanceImprovements
             MaxNumberOfParticles.Value = 100;
             FixProjectileObjectsToSpawn.Value = true;
             FixBulletHitParticleEffects.Value = true;
+            FixMapLoadLag.Value = true;
             DisableBulletHitSurfaceParticleEffects.Value = true;
             DisableBulletHitBulletParticleEffects.Value = true;
             MaximumBulletHitParticlesPerFrame.Value = 3;
@@ -280,7 +318,8 @@ namespace PerformanceImprovements
             if (!TogglesToSync.Keys.Contains(DisableForegroundParticleAnimations)){ TogglesToSync[DisableForegroundParticleAnimations] = new List<Toggle>(){};}
             if (!SlidersToSync.Keys.Contains(MaxNumberOfParticles)){ SlidersToSync[MaxNumberOfParticles] = new List<Slider>(){};}
             if (!TogglesToSync.Keys.Contains(FixProjectileObjectsToSpawn)){ TogglesToSync[FixProjectileObjectsToSpawn] = new List<Toggle>(){};}
-            if (!TogglesToSync.Keys.Contains(FixBulletHitParticleEffects)){ TogglesToSync[FixBulletHitParticleEffects] = new List<Toggle>(){};}
+            if (!TogglesToSync.Keys.Contains(FixBulletHitParticleEffects)) { TogglesToSync[FixBulletHitParticleEffects] = new List<Toggle>() { }; }
+            if (!TogglesToSync.Keys.Contains(FixMapLoadLag)) { TogglesToSync[FixMapLoadLag] = new List<Toggle>() { }; }
             if (!TogglesToSync.Keys.Contains(DisableBulletHitSurfaceParticleEffects)){ TogglesToSync[DisableBulletHitSurfaceParticleEffects] = new List<Toggle>(){};}
             if (!TogglesToSync.Keys.Contains(DisableBulletHitBulletParticleEffects)){ TogglesToSync[DisableBulletHitBulletParticleEffects] = new List<Toggle>(){};}
             if (!SlidersToSync.Keys.Contains(MaximumBulletHitParticlesPerFrame)){ SlidersToSync[MaximumBulletHitParticlesPerFrame] = new List<Slider>(){};}
@@ -301,7 +340,8 @@ namespace PerformanceImprovements
             foreach (Toggle toggle in TogglesToSync[DisableForegroundParticleAnimations]){ toggle.isOn = DisableForegroundParticleAnimations.Value; }
             foreach (Slider slider in SlidersToSync[MaxNumberOfParticles]){ slider.value = MaxNumberOfParticles.Value; }
             foreach (Toggle toggle in TogglesToSync[FixProjectileObjectsToSpawn]){ toggle.isOn = FixProjectileObjectsToSpawn.Value; }
-            foreach (Toggle toggle in TogglesToSync[FixBulletHitParticleEffects]){ toggle.isOn = FixBulletHitParticleEffects.Value; }
+            foreach (Toggle toggle in TogglesToSync[FixBulletHitParticleEffects]) { toggle.isOn = FixBulletHitParticleEffects.Value; }
+            foreach (Toggle toggle in TogglesToSync[FixMapLoadLag]) { toggle.isOn = FixMapLoadLag.Value; }
             foreach (Toggle toggle in TogglesToSync[DisableBulletHitSurfaceParticleEffects]){ toggle.isOn = DisableBulletHitSurfaceParticleEffects.Value; }
             foreach (Toggle toggle in TogglesToSync[DisableBulletHitBulletParticleEffects]){ toggle.isOn = DisableBulletHitBulletParticleEffects.Value; }
             foreach (Slider slider in SlidersToSync[MaximumBulletHitParticlesPerFrame]){ slider.value = MaximumBulletHitParticlesPerFrame.Value; }
@@ -449,6 +489,13 @@ namespace PerformanceImprovements
                 SyncOptionsMenus();
             }
             TogglesToSync[FixBulletHitParticleEffects].Add(MenuHandler.CreateToggle(FixBulletHitParticleEffects.Value, "Fix persistance issues\nwith BulletHit particle effects", menu, FixBulletHitChanged, 30, color: easyChangeColor).GetComponent<Toggle>());
+            void FixMapLagChanged(bool val)
+            {
+                FixMapLoadLag.Value = val;
+                SyncOptionsMenus();
+            }
+            TogglesToSync[FixMapLoadLag].Add(MenuHandler.CreateToggle(FixMapLoadLag.Value, "Reduce lag spikes when maps load", menu, FixMapLagChanged, 30, color: easyChangeColor).GetComponent<Toggle>());
+
             MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
             GameObject helpMenu = MenuHandler.CreateMenu("Help", () => { }, menu, 60, true, true, menu.transform.parent.gameObject);
             FixOptionsHelp(helpMenu);
@@ -457,6 +504,7 @@ namespace PerformanceImprovements
         {
             MenuHandler.CreateText("<size=150%>FIX PERSISTANCE ISSUES WITH PROJECTILE.OBJECTSTOSPAWN:<size=100%>\nFix bug in the vanilla game where objects spawned from bullets would fail to despawn at the end of the round. Major performance and stability impact.", menu, out TextMeshProUGUI _, 30, false, color: easyChangeColor, alignmentOptions: TextAlignmentOptions.Left);
             MenuHandler.CreateText("<size=150%>FIX PERSISTANCE ISSUES WITH BULLETHIT PARTICLE EFFECTS:<size=100%>\nFix bug in the vanilla game where particle effects from bullets hitting the ground or other bullets would fail to despawn at the end of the round. Major performance and stability impact.", menu, out TextMeshProUGUI _, 30, false, color: easyChangeColor, alignmentOptions: TextAlignmentOptions.Left);
+            MenuHandler.CreateText("<size=150%>REDUCE LAG SPIKES WHEN MAPS LOAD:<size=100%>\nFix an oversight in the vanilla game where dynamic objects can cause massive lag spikes related to screenshake and chromatic aberration when they load in. Major performance impact, especially on custom maps.", menu, out TextMeshProUGUI _, 30, false, color: easyChangeColor, alignmentOptions: TextAlignmentOptions.Left);
 
         }
         private static void BulletEffectsOptionsMenu(GameObject menu)
@@ -558,12 +606,31 @@ namespace PerformanceImprovements
 
         private void Screenshaker_OnGameFeel(On.Screenshaker.orig_OnGameFeel orig, global::Screenshaker self, Vector2 feelDirection)
         {
-            orig(self, feelDirection * (float)(ScreenShakeStrength.Value)/100f);
+            orig(self, feelDirection * (float)(PerformanceImprovements.instance.ScreenShakeValue)/100f);
         }
 
         private void ChomaticAberrationFeeler_OnGameFeel(On.ChomaticAberrationFeeler.orig_OnGameFeel orig, global::ChomaticAberrationFeeler self, Vector2 feelDirection)
         {
-            orig(self, feelDirection * (float)(ChromaticAberrationStrength.Value)/100f);
+            orig(self, feelDirection * (float)(PerformanceImprovements.instance.AberrationValue)/100f);
+        }
+
+        internal IEnumerator MapTransitionScalePostFX(float transitionTime)
+        {
+            if (!PerformanceImprovements.FixMapLoadLag.Value) { yield break; }
+            this.PostFXDampening = 0f;
+            yield return new WaitForSecondsRealtime(transitionTime);
+            yield return new WaitUntil(() => PerformanceImprovements.BattleInProgress);
+            yield return new WaitForSecondsRealtime(PerformanceImprovements.mapTransitionExtraDelay);
+            //float t = PerformanceImprovements.mapTransitionExtraDelay;
+            float t = PerformanceImprovements.postFXRampDuration;
+            while (t > 0f)
+            {
+                t -= Time.unscaledDeltaTime;
+                this.PostFXDampening = UnityEngine.Mathf.Lerp(1f, 0f, t / PerformanceImprovements.postFXRampDuration);
+                yield return null;
+            }
+            this.PostFXDampening = 1f;
+            yield break;
         }
 
         private static IEnumerator RemoveAfterPoint(IGameModeHandler gm)

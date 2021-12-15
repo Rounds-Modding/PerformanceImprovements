@@ -8,3 +8,8 @@ A complete guide to the settings, as well as preset configurations, are availabl
 Special thanks to Ascyst for the help.
 
 This mod supplants RemovePostFX and ReducePostFX.
+
+### New in v0.0.1
+-----------------
+
+- A new option in the Bug Fix category: Reduce Lag Spikes when Maps Load
