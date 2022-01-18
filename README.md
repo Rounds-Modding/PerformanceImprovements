@@ -16,6 +16,8 @@ This mod supplants RemovePostFX and ReducePostFX.
 
 - Fixed additional lag caused by the Reduce Lag Spikes when Maps Load option
 
+- Removed settings from the escape menu for the time being, until bugs regarding it are fixed in Unbound.
+
 ### New in v0.0.1
 -----------------
 

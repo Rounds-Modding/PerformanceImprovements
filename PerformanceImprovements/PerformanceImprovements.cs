@@ -146,7 +146,7 @@ namespace PerformanceImprovements
             Unbound.RegisterCredits(ModName, new string[] { "Pykess", "Ascyst (Original RemovePostFX mod)" }, new string[] { "github", "Support Pykess", "Support Ascyst" }, new string[] { "https://github.com/Rounds-Modding/PerformanceImprovements", "https://ko-fi.com/pykess", "https://www.buymeacoffee.com/Ascyst" });
 
             // add GUI to modoptions menu
-            Unbound.RegisterMenu(ModName, () => { }, NewGUI, null, true);
+            Unbound.RegisterMenu(ModName, () => { }, NewGUI, null, false);
 
             // register as client-side
             Unbound.RegisterClientSideMod(ModId);
