@@ -21,7 +21,7 @@ using PerformanceImprovements.Patches;
 namespace PerformanceImprovements
 {
     [BepInDependency("com.willis.rounds.unbound", BepInDependency.DependencyFlags.HardDependency)]
-    [BepInPlugin(ModId, ModName, "0.0.1")]
+    [BepInPlugin(ModId, ModName, "0.0.2")]
     [BepInProcess("Rounds.exe")]
     public class PerformanceImprovements : BaseUnityPlugin
     {
@@ -40,7 +40,7 @@ namespace PerformanceImprovements
         private const float mapTransitionExtraDelay = 0.5f;
         private const float postFXRampDuration = 1f;
 
-        internal Coroutine dampenPostFXCO = null;
+        internal static bool mapTransitionPatchInProgress = false;
 
         private static bool BattleInProgress = false;
 
@@ -80,6 +80,7 @@ namespace PerformanceImprovements
         public static ConfigEntry<bool> FixProjectileObjectsToSpawn;
         public static ConfigEntry<bool> FixBulletHitParticleEffects;
         public static ConfigEntry<bool> FixMapLoadLag;
+        public static ConfigEntry<bool> FixStunPlayer;
         public static ConfigEntry<bool> DisableBulletHitSurfaceParticleEffects;
         public static ConfigEntry<bool> DisableBulletHitBulletParticleEffects;
         public static ConfigEntry<int> MaximumBulletHitParticlesPerFrame;
@@ -128,6 +129,7 @@ namespace PerformanceImprovements
             FixProjectileObjectsToSpawn = Config.Bind(CompatibilityModName, "Fix projectile ObjectsToSpawn", true);
             FixBulletHitParticleEffects = Config.Bind(CompatibilityModName, "Fix BulletHit particle effects", true);
             FixMapLoadLag = Config.Bind(CompatibilityModName, "Fix lag when maps first load", true);
+            FixStunPlayer = Config.Bind(CompatibilityModName, "Fix null reference exception in StunPlayer Go method", true);
             DisableBulletHitSurfaceParticleEffects = Config.Bind(CompatibilityModName, "Disable BulletHitSurface particle effects", false);
             DisableBulletHitBulletParticleEffects = Config.Bind(CompatibilityModName, "Disable BulletHitBullet particle effects", false);
             MaximumBulletHitParticlesPerFrame = Config.Bind(CompatibilityModName, "Maximum BulletHit particles per frame", 5);
@@ -141,7 +143,7 @@ namespace PerformanceImprovements
             //PerformanceImprovements.Assets = AssetUtils.LoadAssetBundleFromResources("performance", typeof(PerformanceImprovements).Assembly);
 
             // add credits
-            Unbound.RegisterCredits(ModName, new string[] { "Pykess", "Ascyst (Original RemovePostFX mod)" }, new string[] { "github", "Buy Pykess a coffee", "Buy Ascyst a coffee" }, new string[] { "https://github.com/Rounds-Modding/PerformanceImprovements", "https://www.buymeacoffee.com/Pykess", "https://www.buymeacoffee.com/Ascyst" });
+            Unbound.RegisterCredits(ModName, new string[] { "Pykess", "Ascyst (Original RemovePostFX mod)" }, new string[] { "github", "Support Pykess", "Support Ascyst" }, new string[] { "https://github.com/Rounds-Modding/PerformanceImprovements", "https://ko-fi.com/pykess", "https://www.buymeacoffee.com/Ascyst" });
 
             // add GUI to modoptions menu
             Unbound.RegisterMenu(ModName, () => { }, NewGUI, null, true);
@@ -199,6 +201,7 @@ namespace PerformanceImprovements
             FixProjectileObjectsToSpawn.Value = false;
             FixBulletHitParticleEffects.Value = false;
             FixMapLoadLag.Value = false;
+            FixStunPlayer.Value = false;
             DisableBulletHitSurfaceParticleEffects.Value = false;
             DisableBulletHitBulletParticleEffects.Value = false;
             MaximumBulletHitParticlesPerFrame.Value = 100;
@@ -223,6 +226,7 @@ namespace PerformanceImprovements
             FixProjectileObjectsToSpawn.Value = true;
             FixBulletHitParticleEffects.Value = true;
             FixMapLoadLag.Value = true;
+            FixStunPlayer.Value = true;
             DisableBulletHitSurfaceParticleEffects.Value = false;
             DisableBulletHitBulletParticleEffects.Value = false;
             MaximumBulletHitParticlesPerFrame.Value = 100;
@@ -247,6 +251,7 @@ namespace PerformanceImprovements
             FixProjectileObjectsToSpawn.Value = true;
             FixBulletHitParticleEffects.Value = true;
             FixMapLoadLag.Value = true;
+            FixStunPlayer.Value = true;
             DisableBulletHitSurfaceParticleEffects.Value = false;
             DisableBulletHitBulletParticleEffects.Value = false;
             MaximumBulletHitParticlesPerFrame.Value = 10;
@@ -271,6 +276,7 @@ namespace PerformanceImprovements
             FixProjectileObjectsToSpawn.Value = true;
             FixBulletHitParticleEffects.Value = true;
             FixMapLoadLag.Value = true;
+            FixStunPlayer.Value = true;
             DisableBulletHitSurfaceParticleEffects.Value = false;
             DisableBulletHitBulletParticleEffects.Value = false;
             MaximumBulletHitParticlesPerFrame.Value = 5;
@@ -295,6 +301,7 @@ namespace PerformanceImprovements
             FixProjectileObjectsToSpawn.Value = true;
             FixBulletHitParticleEffects.Value = true;
             FixMapLoadLag.Value = true;
+            FixStunPlayer.Value = true;
             DisableBulletHitSurfaceParticleEffects.Value = true;
             DisableBulletHitBulletParticleEffects.Value = true;
             MaximumBulletHitParticlesPerFrame.Value = 3;
@@ -320,6 +327,7 @@ namespace PerformanceImprovements
             if (!TogglesToSync.Keys.Contains(FixProjectileObjectsToSpawn)){ TogglesToSync[FixProjectileObjectsToSpawn] = new List<Toggle>(){};}
             if (!TogglesToSync.Keys.Contains(FixBulletHitParticleEffects)) { TogglesToSync[FixBulletHitParticleEffects] = new List<Toggle>() { }; }
             if (!TogglesToSync.Keys.Contains(FixMapLoadLag)) { TogglesToSync[FixMapLoadLag] = new List<Toggle>() { }; }
+            if (!TogglesToSync.Keys.Contains(FixStunPlayer)) { TogglesToSync[FixStunPlayer] = new List<Toggle>() { }; }
             if (!TogglesToSync.Keys.Contains(DisableBulletHitSurfaceParticleEffects)){ TogglesToSync[DisableBulletHitSurfaceParticleEffects] = new List<Toggle>(){};}
             if (!TogglesToSync.Keys.Contains(DisableBulletHitBulletParticleEffects)){ TogglesToSync[DisableBulletHitBulletParticleEffects] = new List<Toggle>(){};}
             if (!SlidersToSync.Keys.Contains(MaximumBulletHitParticlesPerFrame)){ SlidersToSync[MaximumBulletHitParticlesPerFrame] = new List<Slider>(){};}
@@ -342,6 +350,7 @@ namespace PerformanceImprovements
             foreach (Toggle toggle in TogglesToSync[FixProjectileObjectsToSpawn]){ toggle.isOn = FixProjectileObjectsToSpawn.Value; }
             foreach (Toggle toggle in TogglesToSync[FixBulletHitParticleEffects]) { toggle.isOn = FixBulletHitParticleEffects.Value; }
             foreach (Toggle toggle in TogglesToSync[FixMapLoadLag]) { toggle.isOn = FixMapLoadLag.Value; }
+            foreach (Toggle toggle in TogglesToSync[FixStunPlayer]) { toggle.isOn = FixStunPlayer.Value; }
             foreach (Toggle toggle in TogglesToSync[DisableBulletHitSurfaceParticleEffects]){ toggle.isOn = DisableBulletHitSurfaceParticleEffects.Value; }
             foreach (Toggle toggle in TogglesToSync[DisableBulletHitBulletParticleEffects]){ toggle.isOn = DisableBulletHitBulletParticleEffects.Value; }
             foreach (Slider slider in SlidersToSync[MaximumBulletHitParticlesPerFrame]){ slider.value = MaximumBulletHitParticlesPerFrame.Value; }
@@ -495,6 +504,12 @@ namespace PerformanceImprovements
                 SyncOptionsMenus();
             }
             TogglesToSync[FixMapLoadLag].Add(MenuHandler.CreateToggle(FixMapLoadLag.Value, "Reduce lag spikes when maps load", menu, FixMapLagChanged, 30, color: easyChangeColor).GetComponent<Toggle>());
+            void FixStunPlayerChanged(bool val)
+            {
+                FixStunPlayer.Value = val;
+                SyncOptionsMenus();
+            }
+            TogglesToSync[FixStunPlayer].Add(MenuHandler.CreateToggle(FixStunPlayer.Value, "Fix null reference exceptions from player stun effects", menu, FixStunPlayerChanged, 30, color: easyChangeColor).GetComponent<Toggle>());
 
             MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
             GameObject helpMenu = MenuHandler.CreateMenu("Help", () => { }, menu, 60, true, true, menu.transform.parent.gameObject);
@@ -505,6 +520,7 @@ namespace PerformanceImprovements
             MenuHandler.CreateText("<size=150%>FIX PERSISTANCE ISSUES WITH PROJECTILE.OBJECTSTOSPAWN:<size=100%>\nFix bug in the vanilla game where objects spawned from bullets would fail to despawn at the end of the round. Major performance and stability impact.", menu, out TextMeshProUGUI _, 30, false, color: easyChangeColor, alignmentOptions: TextAlignmentOptions.Left);
             MenuHandler.CreateText("<size=150%>FIX PERSISTANCE ISSUES WITH BULLETHIT PARTICLE EFFECTS:<size=100%>\nFix bug in the vanilla game where particle effects from bullets hitting the ground or other bullets would fail to despawn at the end of the round. Major performance and stability impact.", menu, out TextMeshProUGUI _, 30, false, color: easyChangeColor, alignmentOptions: TextAlignmentOptions.Left);
             MenuHandler.CreateText("<size=150%>REDUCE LAG SPIKES WHEN MAPS LOAD:<size=100%>\nFix an oversight in the vanilla game where dynamic objects can cause massive lag spikes related to screenshake and chromatic aberration when they load in. Major performance impact, especially on custom maps.", menu, out TextMeshProUGUI _, 30, false, color: easyChangeColor, alignmentOptions: TextAlignmentOptions.Left);
+            MenuHandler.CreateText("<size=150%>FIX NULL REFERENCE EXCEPTIONS FROM PLAYER STUN EFFECTS:<size=100%>\nFix bug in the vanilla game where the StunPlayer.Go method will throw an unhandled null reference exception. Minor performance impact.", menu, out TextMeshProUGUI _, 30, false, color: easyChangeColor, alignmentOptions: TextAlignmentOptions.Left);
 
         }
         private static void BulletEffectsOptionsMenu(GameObject menu)
@@ -616,12 +632,14 @@ namespace PerformanceImprovements
 
         internal IEnumerator MapTransitionScalePostFX(float transitionTime)
         {
-            if (!PerformanceImprovements.FixMapLoadLag.Value) { yield break; }
+            if (!PerformanceImprovements.FixMapLoadLag.Value || PerformanceImprovements.mapTransitionPatchInProgress) { yield break; }
+
+            PerformanceImprovements.mapTransitionPatchInProgress = true;
+
             this.PostFXDampening = 0f;
             yield return new WaitForSecondsRealtime(transitionTime);
             yield return new WaitUntil(() => PerformanceImprovements.BattleInProgress);
             yield return new WaitForSecondsRealtime(PerformanceImprovements.mapTransitionExtraDelay);
-            //float t = PerformanceImprovements.mapTransitionExtraDelay;
             float t = PerformanceImprovements.postFXRampDuration;
             while (t > 0f)
             {
@@ -630,6 +648,8 @@ namespace PerformanceImprovements
                 yield return null;
             }
             this.PostFXDampening = 1f;
+
+            PerformanceImprovements.mapTransitionPatchInProgress = false;
             yield break;
         }
 

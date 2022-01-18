@@ -42,13 +42,12 @@ namespace PerformanceImprovements.Patches
             {
                 float t = curve.keys[curve.keys.Length - 1].time + random_t;
 
-                if (PerformanceImprovements.instance.dampenPostFXCO != null) { PerformanceImprovements.instance.StopCoroutine(PerformanceImprovements.instance.dampenPostFXCO); }
+                if (PerformanceImprovements.mapTransitionPatchInProgress) { return; }
 
-                PerformanceImprovements.instance.dampenPostFXCO = PerformanceImprovements.instance.StartCoroutine(PerformanceImprovements.instance.MapTransitionScalePostFX(t));
+                PerformanceImprovements.instance.StartCoroutine(PerformanceImprovements.instance.MapTransitionScalePostFX(t));
             }
         }
 
-        // Patch to disable player's ObjectCollider for the entirety of the move
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             List<CodeInstruction> codes = instructions.ToList();
