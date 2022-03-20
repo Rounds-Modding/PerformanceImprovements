@@ -38,7 +38,7 @@ namespace PerformanceImprovements.Patches
 
         static void Start(AnimationCurve curve, float random_t, Map map)
         {
-            if (PerformanceImprovements.FixMapLoadLag.Value && map != null)
+            if (PerformanceImprovements.FixMapLoadLag && map != null)
             {
                 float t = curve.keys[curve.keys.Length - 1].time + random_t;
 

@@ -15,7 +15,7 @@ namespace PerformanceImprovements.Patches
         {
             if (___part != null)
             {
-                ___part.enableEmission = !PerformanceImprovements.DisablePlayerParticles.Value;
+                ___part.enableEmission = !PerformanceImprovements.DisablePlayerParticles;
             }
             if (__instance != null)
             {
@@ -24,11 +24,11 @@ namespace PerformanceImprovements.Patches
                 GameObject handle = spring.transform.GetChild(2).gameObject;
                 GameObject barrel = spring.transform.GetChild(3).gameObject;
 
-                handle.GetComponent<SpriteMask>().enabled = !PerformanceImprovements.DisablePlayerParticles.Value;
-                handle.GetComponent<SpriteRenderer>().enabled = PerformanceImprovements.DisablePlayerParticles.Value;
+                handle.GetComponent<SpriteMask>().enabled = !PerformanceImprovements.DisablePlayerParticles;
+                handle.GetComponent<SpriteRenderer>().enabled = PerformanceImprovements.DisablePlayerParticles;
                 handle.GetComponent<SpriteRenderer>().color = PerformanceImprovements.staticGunColor;
-                barrel.GetComponent<SpriteMask>().enabled = !PerformanceImprovements.DisablePlayerParticles.Value;
-                barrel.GetComponent<SpriteRenderer>().enabled = PerformanceImprovements.DisablePlayerParticles.Value;
+                barrel.GetComponent<SpriteMask>().enabled = !PerformanceImprovements.DisablePlayerParticles;
+                barrel.GetComponent<SpriteRenderer>().enabled = PerformanceImprovements.DisablePlayerParticles;
                 barrel.GetComponent<SpriteRenderer>().color = PerformanceImprovements.staticGunColor;
             }
         }
@@ -40,7 +40,7 @@ namespace PerformanceImprovements.Patches
         {
             if (___part != null) 
             { 
-                ___part.enableEmission = !PerformanceImprovements.DisablePlayerParticles.Value;
+                ___part.enableEmission = !PerformanceImprovements.DisablePlayerParticles;
             }
             if (__instance != null)
             {
@@ -50,11 +50,11 @@ namespace PerformanceImprovements.Patches
                 GameObject handle = spring.transform.GetChild(2).gameObject;
                 GameObject barrel = spring.transform.GetChild(3).gameObject;
 
-                handle.GetComponent<SpriteMask>().enabled = !PerformanceImprovements.DisablePlayerParticles.Value;
-                handle.GetComponent<SpriteRenderer>().enabled = PerformanceImprovements.DisablePlayerParticles.Value;
+                handle.GetComponent<SpriteMask>().enabled = !PerformanceImprovements.DisablePlayerParticles;
+                handle.GetComponent<SpriteRenderer>().enabled = PerformanceImprovements.DisablePlayerParticles;
                 handle.GetComponent<SpriteRenderer>().color = PerformanceImprovements.staticGunColor;
-                barrel.GetComponent<SpriteMask>().enabled = !PerformanceImprovements.DisablePlayerParticles.Value;
-                barrel.GetComponent<SpriteRenderer>().enabled = PerformanceImprovements.DisablePlayerParticles.Value;
+                barrel.GetComponent<SpriteMask>().enabled = !PerformanceImprovements.DisablePlayerParticles;
+                barrel.GetComponent<SpriteRenderer>().enabled = PerformanceImprovements.DisablePlayerParticles;
                 barrel.GetComponent<SpriteRenderer>().color = PerformanceImprovements.staticGunColor;
             }
         }
@@ -67,7 +67,7 @@ namespace PerformanceImprovements.Patches
         private static bool Prefix(PlayerSkinParticle __instance, Color blinkColor)
         {
 
-            if (PerformanceImprovements.DisablePlayerParticles.Value)
+            if (PerformanceImprovements.DisablePlayerParticles)
             {
                 ColorFlash effect = __instance.transform.parent.GetComponentInParent<Player>().gameObject.AddComponent<ColorFlash>();
                 effect.SetColor(blinkColor);
@@ -75,7 +75,7 @@ namespace PerformanceImprovements.Patches
                 effect.SetDuration(blinkTime);
             }
 
-            return !PerformanceImprovements.DisablePlayerParticles.Value;
+            return !PerformanceImprovements.DisablePlayerParticles;
 
         }
     }

@@ -41,7 +41,7 @@ namespace PerformanceImprovements.Patches
 
         private static void Prefix(ProjectileHit __instance)
         {
-            if (PerformanceImprovements.RemoveOutOfBoundsBullets.Value)
+            if (PerformanceImprovements.RemoveOutOfBoundsBullets)
             {
                 if (Time.time >= __instance.GetAdditionalData().lastCheckedTime + delay)
                 {

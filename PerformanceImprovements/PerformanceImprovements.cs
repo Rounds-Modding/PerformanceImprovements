@@ -21,7 +21,7 @@ using PerformanceImprovements.Patches;
 namespace PerformanceImprovements
 {
     [BepInDependency("com.willis.rounds.unbound", BepInDependency.DependencyFlags.HardDependency)]
-    [BepInPlugin(ModId, ModName, "0.0.2")]
+    [BepInPlugin(ModId, ModName, "0.1.0")]
     [BepInProcess("Rounds.exe")]
     public class PerformanceImprovements : BaseUnityPlugin
     {
@@ -64,30 +64,275 @@ namespace PerformanceImprovements
                 _GameInProgress = value;
             }
         }
+        /// <summary>
+        /// case-insensitive settings key
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        internal static string ConfigKey(string name)
+        {
+            return $"{PerformanceImprovements.CompatibilityModName}_{name.ToLower()}";
+        }
 
-        public static ConfigEntry<bool> DisableCardParticleAnimations;
-        public static ConfigEntry<int> NumberOfGeneralParticles;
-        public static ConfigEntry<bool> DisablePlayerParticles;
-        public static ConfigEntry<bool> DisableMapParticles;
-        public static ConfigEntry<bool> DisableBackgroundParticles;
-        public static ConfigEntry<bool> DisableOverheadLightAndShadows;
-        public static ConfigEntry<int> ScreenShakeStrength;
-        public static ConfigEntry<int> ChromaticAberrationStrength;
-        public static ConfigEntry<bool> DisableOverheadLightShake;
-        public static ConfigEntry<bool> DisableBackgroundParticleAnimations;
-        public static ConfigEntry<bool> DisableForegroundParticleAnimations;
-        public static ConfigEntry<int> MaxNumberOfParticles;
-        public static ConfigEntry<bool> FixProjectileObjectsToSpawn;
-        public static ConfigEntry<bool> FixBulletHitParticleEffects;
-        public static ConfigEntry<bool> FixMapLoadLag;
-        public static ConfigEntry<bool> FixStunPlayer;
-        public static ConfigEntry<bool> DisableBulletHitSurfaceParticleEffects;
-        public static ConfigEntry<bool> DisableBulletHitBulletParticleEffects;
-        public static ConfigEntry<int> MaximumBulletHitParticlesPerFrame;
-        public static ConfigEntry<bool> RemoveOutOfBoundsBullets;
+        internal static bool GetBool(string name, bool defaultValue = false)
+        {
+            return PlayerPrefs.GetInt(ConfigKey(name), defaultValue ? 1 : 0) == 1;
+        }
+        internal static void SetBool(string name, bool value)
+        {
+            PlayerPrefs.SetInt(ConfigKey(name), value ? 1 : 0);
+        }
+        internal static int GetInt(string name, int defaultValue = 0)
+        {
+            return PlayerPrefs.GetInt(ConfigKey(name), defaultValue);
+        }
+        internal static void SetInt(string name, int value)
+        {
+            PlayerPrefs.SetInt(ConfigKey(name), value);
+        }
+        internal static float GetFloat(string name, float defaultValue = 0)
+        {
+            return PlayerPrefs.GetFloat(ConfigKey(name), defaultValue);
+        }
+        internal static void SetFloat(string name, float value)
+        {
+            PlayerPrefs.SetFloat(ConfigKey(name), value);
+        }
 
-        internal static Dictionary<ConfigEntry<bool>, List<Toggle>> TogglesToSync = new Dictionary<ConfigEntry<bool>, List<Toggle>>();
-        internal static Dictionary<ConfigEntry<int>, List<Slider>> SlidersToSync = new Dictionary<ConfigEntry<int>, List<Slider>>();
+        public static bool DisableCardParticleAnimations
+        {
+            get
+            {
+                return GetBool("DisableCardParticleAnimations", false);
+            }
+            set
+            {
+                SetBool("DisableCardParticleAnimations", value);
+            }
+        }
+        public static int NumberOfGeneralParticles
+        {
+            get
+            {
+                return GetInt("NumberOfGeneralParticles", 100);
+            }
+            set
+            {
+                SetInt("NumberOfGeneralParticles", value);
+            }
+        }
+        public static bool DisablePlayerParticles
+        {
+            get
+            {
+                return GetBool("DisablePlayerParticles", false);
+            }
+            set
+            {
+                SetBool("DisablePlayerParticles", value);
+            }
+        }
+        public static bool DisableMapParticles
+        {
+            get
+            {
+                return GetBool("DisableMapParticles", false);
+            }
+            set
+            {
+                SetBool("DisableMapParticles", value);
+            }
+        }
+        public static bool DisableBackgroundParticles
+        {
+            get
+            {
+                return GetBool("DisableBackgroundParticles", false);
+            }
+            set
+            {
+                SetBool("DisableBackgroundParticles", value);
+            }
+        }
+        public static bool DisableOverheadLightAndShadows
+        {
+            get
+            {
+                return GetBool("DisableOverheadLightAndShadows", false);
+            }
+            set
+            {
+                SetBool("DisableOverheadLightAndShadows", value);
+            }
+        }
+        public static int ScreenShakeStrength
+        {
+            get
+            {
+                return GetInt("ScreenShakeStrength", 100);
+            }
+            set
+            {
+                SetInt("ScreenShakeStrength", value);
+            }
+        }
+        public static int ChromaticAberrationStrength
+        {
+            get
+            {
+                return GetInt("ChromaticAberrationStrength", 100);
+            }
+            set
+            {
+                SetInt("ChromaticAberrationStrength", value);
+            }
+        }
+        public static bool DisableOverheadLightShake
+        {
+            get
+            {
+                return GetBool("DisableOverheadLightShake", false);
+            }
+            set
+            {
+                SetBool("DisableOverheadLightShake", value);
+            }
+        }
+        public static bool DisableBackgroundParticleAnimations
+        {
+            get
+            {
+                return GetBool("DisableBackgroundParticleAnimations", false);
+            }
+            set
+            {
+                SetBool("DisableBackgroundParticleAnimations", value);
+            }
+        }
+        public static bool DisableForegroundParticleAnimations
+        {
+            get
+            {
+                return GetBool("DisableForegroundParticleAnimations", false);
+            }
+            set
+            {
+                SetBool("DisableForegroundParticleAnimations", value);
+            }
+        }
+        public static int MaxNumberOfParticles
+        {
+            get
+            {
+                return GetInt("MaxNumberOfParticles", 300);
+            }
+            set
+            {
+                SetInt("MaxNumberOfParticles", value);
+            }
+        }
+        public static bool FixProjectileObjectsToSpawn
+        {
+            get
+            {
+                return GetBool("FixProjectileObjectsToSpawn", true);
+            }
+            set
+            {
+                SetBool("FixProjectileObjectsToSpawn", value);
+            }
+        }
+        public static bool FixBulletHitParticleEffects
+        {
+            get
+            {
+                return GetBool("FixBulletHitParticleEffects", true);
+            }
+            set
+            {
+                SetBool("FixBulletHitParticleEffects", value);
+            }
+        }
+        public static bool FixMapLoadLag
+        {
+            get
+            {
+                return GetBool("FixMapLoadLag", true);
+            }
+            set
+            {
+                SetBool("FixMapLoadLag", value);
+            }
+        }
+        public static bool FixStunPlayer
+        {
+            get
+            {
+                return GetBool("FixStunPlayer", true);
+            }
+            set
+            {
+                SetBool("FixStunPlayer", value);
+            }
+        }
+        public static bool FixControllerLag
+        {
+            get
+            {
+                return GetBool("FixControllerLag", true);
+            }
+            set
+            {
+                SetBool("FixControllerLag", value);
+            }
+        }
+        public static bool DisableBulletHitSurfaceParticleEffects
+        {
+            get
+            {
+                return GetBool("DisableBulletHitSurfaceParticleEffects", false);
+            }
+            set
+            {
+                SetBool("DisableBulletHitSurfaceParticleEffects", value);
+            }
+        }
+        public static bool DisableBulletHitBulletParticleEffects
+        {
+            get
+            {
+                return GetBool("DisableBulletHitBulletParticleEffects", false);
+            }
+            set
+            {
+                SetBool("DisableBulletHitBulletParticleEffects", value);
+            }
+        }
+        public static int MaximumBulletHitParticlesPerFrame
+        {
+            get
+            {
+                return GetInt("MaximumBulletHitParticlesPerFrame", 5);
+            }
+            set
+            {
+                SetInt("MaximumBulletHitParticlesPerFrame", value);
+            }
+        }
+        public static bool RemoveOutOfBoundsBullets
+        {
+            get
+            {
+                return GetBool("RemoveOutOfBoundsBullets", false);
+            }
+            set
+            {
+                SetBool("RemoveOutOfBoundsBullets", value);
+            }
+        }
+
+        internal static Dictionary<string, List<Toggle>> TogglesToSync = new Dictionary<string, List<Toggle>>();
+        internal static Dictionary<string, List<Slider>> SlidersToSync = new Dictionary<string, List<Slider>>();
 
         public static PerformanceImprovements instance;
         private PerformanceImprovements()
@@ -98,7 +343,7 @@ namespace PerformanceImprovements
         {
             get
             {
-                return PerformanceImprovements.ScreenShakeStrength.Value * this.PostFXDampening;
+                return PerformanceImprovements.ScreenShakeStrength * this.PostFXDampening;
             }
             set { }
         }
@@ -106,34 +351,13 @@ namespace PerformanceImprovements
         {
             get
             {
-                return PerformanceImprovements.ChromaticAberrationStrength.Value * this.PostFXDampening;
+                return PerformanceImprovements.ChromaticAberrationStrength * this.PostFXDampening;
             }
             set { }
         }
 
         private void Awake()
         {
-            // bind configs with BepInEx
-            DisableCardParticleAnimations = Config.Bind(CompatibilityModName, "Disable Card Particle System Animations", false);
-            NumberOfGeneralParticles = Config.Bind(CompatibilityModName, "Number of General Particles", 100);
-            DisablePlayerParticles = Config.Bind(CompatibilityModName, "Disable player particles", false);
-            DisableMapParticles = Config.Bind(CompatibilityModName, "Disable map particles", false);
-            DisableBackgroundParticles = Config.Bind(CompatibilityModName, "Disable background particles", false);
-            DisableOverheadLightAndShadows = Config.Bind(CompatibilityModName, "Disable overhead light and shadows", false);
-            ScreenShakeStrength = Config.Bind(CompatibilityModName, "Screen shake strength from 0 to 1", 100);
-            ChromaticAberrationStrength = Config.Bind(CompatibilityModName, "Chromatic Aberration Strength from 0 to 1", 100);
-            DisableOverheadLightShake = Config.Bind(CompatibilityModName, "Disable overhead light shake", false);
-            DisableBackgroundParticleAnimations = Config.Bind(CompatibilityModName, "Disable background particle animations", false);
-            DisableForegroundParticleAnimations = Config.Bind(CompatibilityModName, "Disable foreground particle animations", false);
-            MaxNumberOfParticles = Config.Bind(CompatibilityModName, "Maximum number of particles per renderer", 300);
-            FixProjectileObjectsToSpawn = Config.Bind(CompatibilityModName, "Fix projectile ObjectsToSpawn", true);
-            FixBulletHitParticleEffects = Config.Bind(CompatibilityModName, "Fix BulletHit particle effects", true);
-            FixMapLoadLag = Config.Bind(CompatibilityModName, "Fix lag when maps first load", true);
-            FixStunPlayer = Config.Bind(CompatibilityModName, "Fix null reference exception in StunPlayer Go method", true);
-            DisableBulletHitSurfaceParticleEffects = Config.Bind(CompatibilityModName, "Disable BulletHitSurface particle effects", false);
-            DisableBulletHitBulletParticleEffects = Config.Bind(CompatibilityModName, "Disable BulletHitBullet particle effects", false);
-            MaximumBulletHitParticlesPerFrame = Config.Bind(CompatibilityModName, "Maximum BulletHit particles per frame", 5);
-            RemoveOutOfBoundsBullets = Config.Bind(CompatibilityModName, "Remove out of bounds bullets", false);
             // apply patches
             new Harmony(ModId).PatchAll();
         }
@@ -186,175 +410,182 @@ namespace PerformanceImprovements
 
         private static void VanillaPreset()
         {
-            DisableCardParticleAnimations.Value = false;
-            NumberOfGeneralParticles.Value = 100;
-            DisablePlayerParticles.Value = false;
-            DisableMapParticles.Value = false;
-            DisableBackgroundParticles.Value = false;
-            DisableOverheadLightAndShadows.Value = false;
-            ScreenShakeStrength.Value = 100;
-            ChromaticAberrationStrength.Value = 100;
-            DisableOverheadLightShake.Value = false;
-            DisableBackgroundParticleAnimations.Value = false;
-            DisableForegroundParticleAnimations.Value = false;
-            MaxNumberOfParticles.Value = 1000;
-            FixProjectileObjectsToSpawn.Value = false;
-            FixBulletHitParticleEffects.Value = false;
-            FixMapLoadLag.Value = false;
-            FixStunPlayer.Value = false;
-            DisableBulletHitSurfaceParticleEffects.Value = false;
-            DisableBulletHitBulletParticleEffects.Value = false;
-            MaximumBulletHitParticlesPerFrame.Value = 100;
-            RemoveOutOfBoundsBullets.Value = false;
+            DisableCardParticleAnimations = false;
+            NumberOfGeneralParticles = 100;
+            DisablePlayerParticles = false;
+            DisableMapParticles = false;
+            DisableBackgroundParticles = false;
+            DisableOverheadLightAndShadows = false;
+            ScreenShakeStrength = 100;
+            ChromaticAberrationStrength = 100;
+            DisableOverheadLightShake = false;
+            DisableBackgroundParticleAnimations = false;
+            DisableForegroundParticleAnimations = false;
+            MaxNumberOfParticles = 1000;
+            FixProjectileObjectsToSpawn = false;
+            FixBulletHitParticleEffects = false;
+            FixMapLoadLag = false;
+            FixStunPlayer = false;
+            FixControllerLag = false;
+            DisableBulletHitSurfaceParticleEffects = false;
+            DisableBulletHitBulletParticleEffects = false;
+            MaximumBulletHitParticlesPerFrame = 100;
+            RemoveOutOfBoundsBullets = false;
             CycleArt();
             SyncOptionsMenus();
     }
         private static void OnlyBugFixPreset()
         {
-            DisableCardParticleAnimations.Value = false;
-            NumberOfGeneralParticles.Value = 100;
-            DisablePlayerParticles.Value = false;
-            DisableMapParticles.Value = false;
-            DisableBackgroundParticles.Value = false;
-            DisableOverheadLightAndShadows.Value = false;
-            ScreenShakeStrength.Value = 100;
-            ChromaticAberrationStrength.Value = 100;
-            DisableOverheadLightShake.Value = false;
-            DisableBackgroundParticleAnimations.Value = false;
-            DisableForegroundParticleAnimations.Value = false;
-            MaxNumberOfParticles.Value = 1000;
-            FixProjectileObjectsToSpawn.Value = true;
-            FixBulletHitParticleEffects.Value = true;
-            FixMapLoadLag.Value = true;
-            FixStunPlayer.Value = true;
-            DisableBulletHitSurfaceParticleEffects.Value = false;
-            DisableBulletHitBulletParticleEffects.Value = false;
-            MaximumBulletHitParticlesPerFrame.Value = 100;
-            RemoveOutOfBoundsBullets.Value = false;
+            DisableCardParticleAnimations = false;
+            NumberOfGeneralParticles = 100;
+            DisablePlayerParticles = false;
+            DisableMapParticles = false;
+            DisableBackgroundParticles = false;
+            DisableOverheadLightAndShadows = false;
+            ScreenShakeStrength = 100;
+            ChromaticAberrationStrength = 100;
+            DisableOverheadLightShake = false;
+            DisableBackgroundParticleAnimations = false;
+            DisableForegroundParticleAnimations = false;
+            MaxNumberOfParticles = 1000;
+            FixProjectileObjectsToSpawn = true;
+            FixBulletHitParticleEffects = true;
+            FixMapLoadLag = true;
+            FixStunPlayer = true;
+            FixControllerLag = true;
+            DisableBulletHitSurfaceParticleEffects = false;
+            DisableBulletHitBulletParticleEffects = false;
+            MaximumBulletHitParticlesPerFrame = 100;
+            RemoveOutOfBoundsBullets = false;
             CycleArt();
             SyncOptionsMenus();
         }
         private static void BetterPerformancePreset()
         {
-            DisableCardParticleAnimations.Value = false;
-            NumberOfGeneralParticles.Value = 20;
-            DisablePlayerParticles.Value = false;
-            DisableMapParticles.Value = false;
-            DisableBackgroundParticles.Value = false;
-            DisableOverheadLightAndShadows.Value = false;
-            ScreenShakeStrength.Value = 100;
-            ChromaticAberrationStrength.Value = 100;
-            DisableOverheadLightShake.Value = false;
-            DisableBackgroundParticleAnimations.Value = false;
-            DisableForegroundParticleAnimations.Value = false;
-            MaxNumberOfParticles.Value = 500;
-            FixProjectileObjectsToSpawn.Value = true;
-            FixBulletHitParticleEffects.Value = true;
-            FixMapLoadLag.Value = true;
-            FixStunPlayer.Value = true;
-            DisableBulletHitSurfaceParticleEffects.Value = false;
-            DisableBulletHitBulletParticleEffects.Value = false;
-            MaximumBulletHitParticlesPerFrame.Value = 10;
-            RemoveOutOfBoundsBullets.Value = false;
+            DisableCardParticleAnimations = false;
+            NumberOfGeneralParticles = 20;
+            DisablePlayerParticles = false;
+            DisableMapParticles = false;
+            DisableBackgroundParticles = false;
+            DisableOverheadLightAndShadows = false;
+            ScreenShakeStrength = 100;
+            ChromaticAberrationStrength = 100;
+            DisableOverheadLightShake = false;
+            DisableBackgroundParticleAnimations = false;
+            DisableForegroundParticleAnimations = false;
+            MaxNumberOfParticles = 500;
+            FixProjectileObjectsToSpawn = true;
+            FixBulletHitParticleEffects = true;
+            FixMapLoadLag = true;
+            FixStunPlayer = true;
+            FixControllerLag = true;
+            DisableBulletHitSurfaceParticleEffects = false;
+            DisableBulletHitBulletParticleEffects = false;
+            MaximumBulletHitParticlesPerFrame = 10;
+            RemoveOutOfBoundsBullets = false;
             CycleArt();
             SyncOptionsMenus();
         }
         private static void HighPerformancePreset()
         {
-            DisableCardParticleAnimations.Value = true;
-            NumberOfGeneralParticles.Value = 20;
-            DisablePlayerParticles.Value = false;
-            DisableMapParticles.Value = false;
-            DisableBackgroundParticles.Value = false;
-            DisableOverheadLightAndShadows.Value = false;
-            ScreenShakeStrength.Value = 50;
-            ChromaticAberrationStrength.Value = 50;
-            DisableOverheadLightShake.Value = false;
-            DisableBackgroundParticleAnimations.Value = true;
-            DisableForegroundParticleAnimations.Value = true;
-            MaxNumberOfParticles.Value = 300;
-            FixProjectileObjectsToSpawn.Value = true;
-            FixBulletHitParticleEffects.Value = true;
-            FixMapLoadLag.Value = true;
-            FixStunPlayer.Value = true;
-            DisableBulletHitSurfaceParticleEffects.Value = false;
-            DisableBulletHitBulletParticleEffects.Value = false;
-            MaximumBulletHitParticlesPerFrame.Value = 5;
-            RemoveOutOfBoundsBullets.Value = false;
+            DisableCardParticleAnimations = true;
+            NumberOfGeneralParticles = 20;
+            DisablePlayerParticles = false;
+            DisableMapParticles = false;
+            DisableBackgroundParticles = false;
+            DisableOverheadLightAndShadows = false;
+            ScreenShakeStrength = 50;
+            ChromaticAberrationStrength = 50;
+            DisableOverheadLightShake = false;
+            DisableBackgroundParticleAnimations = true;
+            DisableForegroundParticleAnimations = true;
+            MaxNumberOfParticles = 300;
+            FixProjectileObjectsToSpawn = true;
+            FixBulletHitParticleEffects = true;
+            FixMapLoadLag = true;
+            FixStunPlayer = true;
+            FixControllerLag = true;
+            DisableBulletHitSurfaceParticleEffects = false;
+            DisableBulletHitBulletParticleEffects = false;
+            MaximumBulletHitParticlesPerFrame = 5;
+            RemoveOutOfBoundsBullets = false;
             CycleArt();
             SyncOptionsMenus();
         }
         private static void MaxPerformancePreset()
         {
-            DisableCardParticleAnimations.Value = true;
-            NumberOfGeneralParticles.Value = 10;
-            DisablePlayerParticles.Value = true;
-            DisableMapParticles.Value = true;
-            DisableBackgroundParticles.Value = true;
-            DisableOverheadLightAndShadows.Value = true;
-            ScreenShakeStrength.Value = 0;
-            ChromaticAberrationStrength.Value = 0;
-            DisableOverheadLightShake.Value = true;
-            DisableBackgroundParticleAnimations.Value = true;
-            DisableForegroundParticleAnimations.Value = true;
-            MaxNumberOfParticles.Value = 100;
-            FixProjectileObjectsToSpawn.Value = true;
-            FixBulletHitParticleEffects.Value = true;
-            FixMapLoadLag.Value = true;
-            FixStunPlayer.Value = true;
-            DisableBulletHitSurfaceParticleEffects.Value = true;
-            DisableBulletHitBulletParticleEffects.Value = true;
-            MaximumBulletHitParticlesPerFrame.Value = 3;
-            RemoveOutOfBoundsBullets.Value = true;
+            DisableCardParticleAnimations = true;
+            NumberOfGeneralParticles = 10;
+            DisablePlayerParticles = true;
+            DisableMapParticles = true;
+            DisableBackgroundParticles = true;
+            DisableOverheadLightAndShadows = true;
+            ScreenShakeStrength = 0;
+            ChromaticAberrationStrength = 0;
+            DisableOverheadLightShake = true;
+            DisableBackgroundParticleAnimations = true;
+            DisableForegroundParticleAnimations = true;
+            MaxNumberOfParticles = 100;
+            FixProjectileObjectsToSpawn = true;
+            FixBulletHitParticleEffects = true;
+            FixMapLoadLag = true;
+            FixStunPlayer = true;
+            FixControllerLag = true;
+            DisableBulletHitSurfaceParticleEffects = true;
+            DisableBulletHitBulletParticleEffects = true;
+            MaximumBulletHitParticlesPerFrame = 3;
+            RemoveOutOfBoundsBullets = true;
             CycleArt();
             SyncOptionsMenus();
         }
 
         private static void InitializeOptionsDictionaries()
         {
-            if (!TogglesToSync.Keys.Contains(DisableCardParticleAnimations)) { TogglesToSync[DisableCardParticleAnimations] = new List<Toggle>() { }; }
-            if (!SlidersToSync.Keys.Contains(NumberOfGeneralParticles)){ SlidersToSync[NumberOfGeneralParticles] = new List<Slider>(){};}
-            if (!TogglesToSync.Keys.Contains(DisablePlayerParticles)){ TogglesToSync[DisablePlayerParticles] = new List<Toggle>(){};}
-            if (!TogglesToSync.Keys.Contains(DisableMapParticles)){ TogglesToSync[DisableMapParticles] = new List<Toggle>(){};}
-            if (!TogglesToSync.Keys.Contains(DisableBackgroundParticles)){ TogglesToSync[DisableBackgroundParticles] = new List<Toggle>(){};}
-            if (!TogglesToSync.Keys.Contains(DisableOverheadLightAndShadows)){ TogglesToSync[DisableOverheadLightAndShadows] = new List<Toggle>(){};}
-            if (!SlidersToSync.Keys.Contains(ScreenShakeStrength)){ SlidersToSync[ScreenShakeStrength] = new List<Slider>(){};}
-            if (!SlidersToSync.Keys.Contains(ChromaticAberrationStrength)){ SlidersToSync[ChromaticAberrationStrength] = new List<Slider>(){};}
-            if (!TogglesToSync.Keys.Contains(DisableOverheadLightShake)){ TogglesToSync[DisableOverheadLightShake] = new List<Toggle>(){};}
-            if (!TogglesToSync.Keys.Contains(DisableBackgroundParticleAnimations)){ TogglesToSync[DisableBackgroundParticleAnimations] = new List<Toggle>(){};}
-            if (!TogglesToSync.Keys.Contains(DisableForegroundParticleAnimations)){ TogglesToSync[DisableForegroundParticleAnimations] = new List<Toggle>(){};}
-            if (!SlidersToSync.Keys.Contains(MaxNumberOfParticles)){ SlidersToSync[MaxNumberOfParticles] = new List<Slider>(){};}
-            if (!TogglesToSync.Keys.Contains(FixProjectileObjectsToSpawn)){ TogglesToSync[FixProjectileObjectsToSpawn] = new List<Toggle>(){};}
-            if (!TogglesToSync.Keys.Contains(FixBulletHitParticleEffects)) { TogglesToSync[FixBulletHitParticleEffects] = new List<Toggle>() { }; }
-            if (!TogglesToSync.Keys.Contains(FixMapLoadLag)) { TogglesToSync[FixMapLoadLag] = new List<Toggle>() { }; }
-            if (!TogglesToSync.Keys.Contains(FixStunPlayer)) { TogglesToSync[FixStunPlayer] = new List<Toggle>() { }; }
-            if (!TogglesToSync.Keys.Contains(DisableBulletHitSurfaceParticleEffects)){ TogglesToSync[DisableBulletHitSurfaceParticleEffects] = new List<Toggle>(){};}
-            if (!TogglesToSync.Keys.Contains(DisableBulletHitBulletParticleEffects)){ TogglesToSync[DisableBulletHitBulletParticleEffects] = new List<Toggle>(){};}
-            if (!SlidersToSync.Keys.Contains(MaximumBulletHitParticlesPerFrame)){ SlidersToSync[MaximumBulletHitParticlesPerFrame] = new List<Slider>(){};}
-            if (!TogglesToSync.Keys.Contains(RemoveOutOfBoundsBullets)){ TogglesToSync[RemoveOutOfBoundsBullets] = new List<Toggle>(){};}
+            if (!TogglesToSync.Keys.Contains("DisableCardParticleAnimations")) { TogglesToSync["DisableCardParticleAnimations"] = new List<Toggle>() { }; }
+            if (!SlidersToSync.Keys.Contains("NumberOfGeneralParticles")){ SlidersToSync["NumberOfGeneralParticles"] = new List<Slider>(){};}
+            if (!TogglesToSync.Keys.Contains("DisablePlayerParticles")){ TogglesToSync["DisablePlayerParticles"] = new List<Toggle>(){};}
+            if (!TogglesToSync.Keys.Contains("DisableMapParticles")){ TogglesToSync["DisableMapParticles"] = new List<Toggle>(){};}
+            if (!TogglesToSync.Keys.Contains("DisableBackgroundParticles")){ TogglesToSync["DisableBackgroundParticles"] = new List<Toggle>(){};}
+            if (!TogglesToSync.Keys.Contains("DisableOverheadLightAndShadows")){ TogglesToSync["DisableOverheadLightAndShadows"] = new List<Toggle>(){};}
+            if (!SlidersToSync.Keys.Contains("ScreenShakeStrength")){ SlidersToSync["ScreenShakeStrength"] = new List<Slider>(){};}
+            if (!SlidersToSync.Keys.Contains("ChromaticAberrationStrength")){ SlidersToSync["ChromaticAberrationStrength"] = new List<Slider>(){};}
+            if (!TogglesToSync.Keys.Contains("DisableOverheadLightShake")){ TogglesToSync["DisableOverheadLightShake"] = new List<Toggle>(){};}
+            if (!TogglesToSync.Keys.Contains("DisableBackgroundParticleAnimations")){ TogglesToSync["DisableBackgroundParticleAnimations"] = new List<Toggle>(){};}
+            if (!TogglesToSync.Keys.Contains("DisableForegroundParticleAnimations")){ TogglesToSync["DisableForegroundParticleAnimations"] = new List<Toggle>(){};}
+            if (!SlidersToSync.Keys.Contains("MaxNumberOfParticles")){ SlidersToSync["MaxNumberOfParticles"] = new List<Slider>(){};}
+            if (!TogglesToSync.Keys.Contains("FixProjectileObjectsToSpawn")){ TogglesToSync["FixProjectileObjectsToSpawn"] = new List<Toggle>(){};}
+            if (!TogglesToSync.Keys.Contains("FixBulletHitParticleEffects")) { TogglesToSync["FixBulletHitParticleEffects"] = new List<Toggle>() { }; }
+            if (!TogglesToSync.Keys.Contains("FixMapLoadLag")) { TogglesToSync["FixMapLoadLag"] = new List<Toggle>() { }; }
+            if (!TogglesToSync.Keys.Contains("FixStunPlayer")) { TogglesToSync["FixStunPlayer"] = new List<Toggle>() { }; }
+            if (!TogglesToSync.Keys.Contains("FixControllerLag")) { TogglesToSync["FixControllerLag"] = new List<Toggle>() { }; }
+            if (!TogglesToSync.Keys.Contains("DisableBulletHitSurfaceParticleEffects")){ TogglesToSync["DisableBulletHitSurfaceParticleEffects"] = new List<Toggle>(){};}
+            if (!TogglesToSync.Keys.Contains("DisableBulletHitBulletParticleEffects")){ TogglesToSync["DisableBulletHitBulletParticleEffects"] = new List<Toggle>(){};}
+            if (!SlidersToSync.Keys.Contains("MaximumBulletHitParticlesPerFrame")){ SlidersToSync["MaximumBulletHitParticlesPerFrame"] = new List<Slider>(){};}
+            if (!TogglesToSync.Keys.Contains("RemoveOutOfBoundsBullets")){ TogglesToSync["RemoveOutOfBoundsBullets"] = new List<Toggle>(){};}
         }
         private static void SyncOptionsMenus(int recurse = 3)
         {
-            foreach (Toggle toggle in TogglesToSync[DisableCardParticleAnimations]) { toggle.isOn = DisableCardParticleAnimations.Value; }
-            foreach (Slider slider in SlidersToSync[NumberOfGeneralParticles]){ slider.value = NumberOfGeneralParticles.Value; }
-            foreach (Toggle toggle in TogglesToSync[DisablePlayerParticles]){ toggle.isOn = DisablePlayerParticles.Value; }
-            foreach (Toggle toggle in TogglesToSync[DisableMapParticles]){ toggle.isOn = DisableMapParticles.Value; }
-            foreach (Toggle toggle in TogglesToSync[DisableBackgroundParticles]){ toggle.isOn = DisableBackgroundParticles.Value; }
-            foreach (Toggle toggle in TogglesToSync[DisableOverheadLightAndShadows]){ toggle.isOn = DisableOverheadLightAndShadows.Value; }
-            foreach (Slider slider in SlidersToSync[ScreenShakeStrength]){ slider.value = ScreenShakeStrength.Value; }
-            foreach (Slider slider in SlidersToSync[ChromaticAberrationStrength]){ slider.value = ChromaticAberrationStrength.Value; }
-            foreach (Toggle toggle in TogglesToSync[DisableOverheadLightShake]){ toggle.isOn = DisableOverheadLightShake.Value; }
-            foreach (Toggle toggle in TogglesToSync[DisableBackgroundParticleAnimations]){ toggle.isOn = DisableBackgroundParticleAnimations.Value; }
-            foreach (Toggle toggle in TogglesToSync[DisableForegroundParticleAnimations]){ toggle.isOn = DisableForegroundParticleAnimations.Value; }
-            foreach (Slider slider in SlidersToSync[MaxNumberOfParticles]){ slider.value = MaxNumberOfParticles.Value; }
-            foreach (Toggle toggle in TogglesToSync[FixProjectileObjectsToSpawn]){ toggle.isOn = FixProjectileObjectsToSpawn.Value; }
-            foreach (Toggle toggle in TogglesToSync[FixBulletHitParticleEffects]) { toggle.isOn = FixBulletHitParticleEffects.Value; }
-            foreach (Toggle toggle in TogglesToSync[FixMapLoadLag]) { toggle.isOn = FixMapLoadLag.Value; }
-            foreach (Toggle toggle in TogglesToSync[FixStunPlayer]) { toggle.isOn = FixStunPlayer.Value; }
-            foreach (Toggle toggle in TogglesToSync[DisableBulletHitSurfaceParticleEffects]){ toggle.isOn = DisableBulletHitSurfaceParticleEffects.Value; }
-            foreach (Toggle toggle in TogglesToSync[DisableBulletHitBulletParticleEffects]){ toggle.isOn = DisableBulletHitBulletParticleEffects.Value; }
-            foreach (Slider slider in SlidersToSync[MaximumBulletHitParticlesPerFrame]){ slider.value = MaximumBulletHitParticlesPerFrame.Value; }
-            foreach (Toggle toggle in TogglesToSync[RemoveOutOfBoundsBullets]){ toggle.isOn = RemoveOutOfBoundsBullets.Value; }
+            foreach (Toggle toggle in TogglesToSync["DisableCardParticleAnimations"]) { toggle.isOn = DisableCardParticleAnimations; }
+            foreach (Slider slider in SlidersToSync["NumberOfGeneralParticles"]){ slider.value = NumberOfGeneralParticles; }
+            foreach (Toggle toggle in TogglesToSync["DisablePlayerParticles"]){ toggle.isOn = DisablePlayerParticles; }
+            foreach (Toggle toggle in TogglesToSync["DisableMapParticles"]){ toggle.isOn = DisableMapParticles; }
+            foreach (Toggle toggle in TogglesToSync["DisableBackgroundParticles"]){ toggle.isOn = DisableBackgroundParticles; }
+            foreach (Toggle toggle in TogglesToSync["DisableOverheadLightAndShadows"]){ toggle.isOn = DisableOverheadLightAndShadows; }
+            foreach (Slider slider in SlidersToSync["ScreenShakeStrength"]){ slider.value = ScreenShakeStrength; }
+            foreach (Slider slider in SlidersToSync["ChromaticAberrationStrength"]){ slider.value = ChromaticAberrationStrength; }
+            foreach (Toggle toggle in TogglesToSync["DisableOverheadLightShake"]){ toggle.isOn = DisableOverheadLightShake; }
+            foreach (Toggle toggle in TogglesToSync["DisableBackgroundParticleAnimations"]){ toggle.isOn = DisableBackgroundParticleAnimations; }
+            foreach (Toggle toggle in TogglesToSync["DisableForegroundParticleAnimations"]){ toggle.isOn = DisableForegroundParticleAnimations; }
+            foreach (Slider slider in SlidersToSync["MaxNumberOfParticles"]){ slider.value = MaxNumberOfParticles; }
+            foreach (Toggle toggle in TogglesToSync["FixProjectileObjectsToSpawn"]){ toggle.isOn = FixProjectileObjectsToSpawn; }
+            foreach (Toggle toggle in TogglesToSync["FixBulletHitParticleEffects"]) { toggle.isOn = FixBulletHitParticleEffects; }
+            foreach (Toggle toggle in TogglesToSync["FixMapLoadLag"]) { toggle.isOn = FixMapLoadLag; }
+            foreach (Toggle toggle in TogglesToSync["FixStunPlayer"]) { toggle.isOn = FixStunPlayer; }
+            foreach (Toggle toggle in TogglesToSync["FixControllerLag"]) { toggle.isOn = FixControllerLag; }
+            foreach (Toggle toggle in TogglesToSync["DisableBulletHitSurfaceParticleEffects"]){ toggle.isOn = DisableBulletHitSurfaceParticleEffects; }
+            foreach (Toggle toggle in TogglesToSync["DisableBulletHitBulletParticleEffects"]){ toggle.isOn = DisableBulletHitBulletParticleEffects; }
+            foreach (Slider slider in SlidersToSync["MaximumBulletHitParticlesPerFrame"]){ slider.value = MaximumBulletHitParticlesPerFrame; }
+            foreach (Toggle toggle in TogglesToSync["RemoveOutOfBoundsBullets"]){ toggle.isOn = RemoveOutOfBoundsBullets; }
             if (recurse > 0) { SyncOptionsMenus(recurse-1); }
         }
 
@@ -408,63 +639,63 @@ namespace PerformanceImprovements
             MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
             void MaxParticlesChanged(float val)
             {
-                MaxNumberOfParticles.Value = (int)val;
+                MaxNumberOfParticles = (int)val;
                 CycleArt();
                 SyncOptionsMenus();
             }
-            MenuHandler.CreateSlider("Maximum number of particles", menu, 30, 20f, 1000f, MaxNumberOfParticles.Value, MaxParticlesChanged, out Slider slider1, true, color: easyChangeColor);
-            SlidersToSync[MaxNumberOfParticles].Add(slider1);
+            MenuHandler.CreateSlider("Maximum number of particles", menu, 30, 20f, 1000f, MaxNumberOfParticles, MaxParticlesChanged, out Slider slider1, true, color: easyChangeColor);
+            SlidersToSync["MaxNumberOfParticles"].Add(slider1);
             void NumPartsChanged(float val)
             {
-                NumberOfGeneralParticles.Value = (int)val;
+                NumberOfGeneralParticles = (int)val;
                 SyncOptionsMenus();
             }
-            MenuHandler.CreateSlider("Max number of particles for GeneralParticleSystems", menu, 30, 10f, 100f, NumberOfGeneralParticles.Value, NumPartsChanged, out Slider slider, true, color: easyChangeColor);
-            SlidersToSync[NumberOfGeneralParticles].Add(slider);
+            MenuHandler.CreateSlider("Max number of particles for GeneralParticleSystems", menu, 30, 10f, 100f, NumberOfGeneralParticles, NumPartsChanged, out Slider slider, true, color: easyChangeColor);
+            SlidersToSync["NumberOfGeneralParticles"].Add(slider);
             MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
             void CardPartAnimChanged(bool val)
             {
-                DisableCardParticleAnimations.Value = val;
+                DisableCardParticleAnimations = val;
                 SyncOptionsMenus();
             }
-            TogglesToSync[DisableCardParticleAnimations].Add(MenuHandler.CreateToggle(DisableCardParticleAnimations.Value, "Disable Card Particle Animations", menu, CardPartAnimChanged, 30).GetComponent<Toggle>());
+            TogglesToSync["DisableCardParticleAnimations"].Add(MenuHandler.CreateToggle(DisableCardParticleAnimations, "Disable Card Particle Animations", menu, CardPartAnimChanged, 30).GetComponent<Toggle>());
             void BackPartAnimChanged(bool val)
             {
-                DisableBackgroundParticleAnimations.Value = val;
+                DisableBackgroundParticleAnimations = val;
                 CycleArt();
                 SyncOptionsMenus();
             }
-            TogglesToSync[DisableBackgroundParticleAnimations].Add(MenuHandler.CreateToggle(DisableBackgroundParticleAnimations.Value, "Disable Background Particle Animations", menu, BackPartAnimChanged, 30).GetComponent<Toggle>());
+            TogglesToSync["DisableBackgroundParticleAnimations"].Add(MenuHandler.CreateToggle(DisableBackgroundParticleAnimations, "Disable Background Particle Animations", menu, BackPartAnimChanged, 30).GetComponent<Toggle>());
             void ForePartAnimChanged(bool val)
             {
-                DisableForegroundParticleAnimations.Value = val;
+                DisableForegroundParticleAnimations = val;
                 CycleArt();
                 SyncOptionsMenus();
             }
-            TogglesToSync[DisableForegroundParticleAnimations].Add(MenuHandler.CreateToggle(DisableForegroundParticleAnimations.Value, "Disable Foreground Particle Animations", menu, ForePartAnimChanged, 30).GetComponent<Toggle>());
+            TogglesToSync["DisableForegroundParticleAnimations"].Add(MenuHandler.CreateToggle(DisableForegroundParticleAnimations, "Disable Foreground Particle Animations", menu, ForePartAnimChanged, 30).GetComponent<Toggle>());
             MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
             void SimpleSkinChanged(bool val)
             {
-                DisablePlayerParticles.Value = val;
+                DisablePlayerParticles = val;
                 CycleArt();
                 SyncOptionsMenus();
             }
-            TogglesToSync[DisablePlayerParticles].Add(MenuHandler.CreateToggle(DisablePlayerParticles.Value, "Use simple player skins", menu, SimpleSkinChanged, 30, color: hardChangeColor).GetComponent<Toggle>());
+            TogglesToSync["DisablePlayerParticles"].Add(MenuHandler.CreateToggle(DisablePlayerParticles, "Use simple player skins", menu, SimpleSkinChanged, 30, color: hardChangeColor).GetComponent<Toggle>());
 
             void BackParticlesChanged(bool val)
             {
-                DisableBackgroundParticles.Value = val;
+                DisableBackgroundParticles = val;
                 CycleArt();
                 SyncOptionsMenus();
             }
-            TogglesToSync[DisableBackgroundParticles].Add(MenuHandler.CreateToggle(DisableBackgroundParticles.Value, "Disable Background Particle Effects", menu, BackParticlesChanged, 30, color: hardChangeColor).GetComponent<Toggle>());
+            TogglesToSync["DisableBackgroundParticles"].Add(MenuHandler.CreateToggle(DisableBackgroundParticles, "Disable Background Particle Effects", menu, BackParticlesChanged, 30, color: hardChangeColor).GetComponent<Toggle>());
             void MapParticlesChanged(bool val)
             {
-                DisableMapParticles.Value = val;
+                DisableMapParticles = val;
                 CycleArt();
                 SyncOptionsMenus();
             }
-            TogglesToSync[DisableMapParticles].Add(MenuHandler.CreateToggle(DisableMapParticles.Value, "Disable Map Particle Effects", menu, MapParticlesChanged, 30, color: hardChangeColor).GetComponent<Toggle>());
+            TogglesToSync["DisableMapParticles"].Add(MenuHandler.CreateToggle(DisableMapParticles, "Disable Map Particle Effects", menu, MapParticlesChanged, 30, color: hardChangeColor).GetComponent<Toggle>());
 
             MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
             GameObject helpMenu = MenuHandler.CreateMenu("Help", () => { }, menu, 60, true, true, menu.transform.parent.gameObject);
@@ -488,28 +719,34 @@ namespace PerformanceImprovements
             MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
             void FixObjToSpawnChanged(bool val)
             {
-                FixProjectileObjectsToSpawn.Value = val;
+                FixProjectileObjectsToSpawn = val;
                 SyncOptionsMenus();
             }
-            TogglesToSync[FixProjectileObjectsToSpawn].Add(MenuHandler.CreateToggle(FixProjectileObjectsToSpawn.Value, "Fix persistance issues\nwith Projectile.ObjectsToSpawn", menu, FixObjToSpawnChanged, 30, color: easyChangeColor).GetComponent<Toggle>());
+            TogglesToSync["FixProjectileObjectsToSpawn"].Add(MenuHandler.CreateToggle(FixProjectileObjectsToSpawn, "Fix persistance issues\nwith Projectile.ObjectsToSpawn", menu, FixObjToSpawnChanged, 30, color: easyChangeColor).GetComponent<Toggle>());
             void FixBulletHitChanged(bool val)
             {
-                FixBulletHitParticleEffects.Value = val;
+                FixBulletHitParticleEffects = val;
                 SyncOptionsMenus();
             }
-            TogglesToSync[FixBulletHitParticleEffects].Add(MenuHandler.CreateToggle(FixBulletHitParticleEffects.Value, "Fix persistance issues\nwith BulletHit particle effects", menu, FixBulletHitChanged, 30, color: easyChangeColor).GetComponent<Toggle>());
+            TogglesToSync["FixBulletHitParticleEffects"].Add(MenuHandler.CreateToggle(FixBulletHitParticleEffects, "Fix persistance issues\nwith BulletHit particle effects", menu, FixBulletHitChanged, 30, color: easyChangeColor).GetComponent<Toggle>());
             void FixMapLagChanged(bool val)
             {
-                FixMapLoadLag.Value = val;
+                FixMapLoadLag = val;
                 SyncOptionsMenus();
             }
-            TogglesToSync[FixMapLoadLag].Add(MenuHandler.CreateToggle(FixMapLoadLag.Value, "Reduce lag spikes when maps load", menu, FixMapLagChanged, 30, color: easyChangeColor).GetComponent<Toggle>());
+            TogglesToSync["FixMapLoadLag"].Add(MenuHandler.CreateToggle(FixMapLoadLag, "Reduce lag spikes when maps load", menu, FixMapLagChanged, 30, color: easyChangeColor).GetComponent<Toggle>());
             void FixStunPlayerChanged(bool val)
             {
-                FixStunPlayer.Value = val;
+                FixStunPlayer = val;
                 SyncOptionsMenus();
             }
-            TogglesToSync[FixStunPlayer].Add(MenuHandler.CreateToggle(FixStunPlayer.Value, "Fix null reference exceptions from player stun effects", menu, FixStunPlayerChanged, 30, color: easyChangeColor).GetComponent<Toggle>());
+            TogglesToSync["FixStunPlayer"].Add(MenuHandler.CreateToggle(FixStunPlayer, "Fix null reference exceptions from player stun effects", menu, FixStunPlayerChanged, 30, color: easyChangeColor).GetComponent<Toggle>());
+            void FixControllerLagChanged(bool val)
+            {
+                FixControllerLag = val;
+                SyncOptionsMenus();
+            }
+            TogglesToSync["FixControllerLag"].Add(MenuHandler.CreateToggle(FixControllerLag, "Fix heavy framerate stuttering during controller inputs", menu, FixControllerLagChanged, 30, color: easyChangeColor).GetComponent<Toggle>());
 
             MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
             GameObject helpMenu = MenuHandler.CreateMenu("Help", () => { }, menu, 60, true, true, menu.transform.parent.gameObject);
@@ -521,6 +758,7 @@ namespace PerformanceImprovements
             MenuHandler.CreateText("<size=150%>FIX PERSISTANCE ISSUES WITH BULLETHIT PARTICLE EFFECTS:<size=100%>\nFix bug in the vanilla game where particle effects from bullets hitting the ground or other bullets would fail to despawn at the end of the round. Major performance and stability impact.", menu, out TextMeshProUGUI _, 30, false, color: easyChangeColor, alignmentOptions: TextAlignmentOptions.Left);
             MenuHandler.CreateText("<size=150%>REDUCE LAG SPIKES WHEN MAPS LOAD:<size=100%>\nFix an oversight in the vanilla game where dynamic objects can cause massive lag spikes related to screenshake and chromatic aberration when they load in. Major performance impact, especially on custom maps.", menu, out TextMeshProUGUI _, 30, false, color: easyChangeColor, alignmentOptions: TextAlignmentOptions.Left);
             MenuHandler.CreateText("<size=150%>FIX NULL REFERENCE EXCEPTIONS FROM PLAYER STUN EFFECTS:<size=100%>\nFix bug in the vanilla game where the StunPlayer.Go method will throw an unhandled null reference exception. Minor performance impact.", menu, out TextMeshProUGUI _, 30, false, color: easyChangeColor, alignmentOptions: TextAlignmentOptions.Left);
+            MenuHandler.CreateText("<size=150%>FIX HEAVY FRAMERATE STUTTERING DURING CONTROLLER INPUTS:<size=100%>\nFix bug in the vanilla game where controller inputs can cause extreme framerate stutter. Major performance impact.", menu, out TextMeshProUGUI _, 30, false, color: easyChangeColor, alignmentOptions: TextAlignmentOptions.Left);
 
         }
         private static void BulletEffectsOptionsMenu(GameObject menu)
@@ -529,24 +767,24 @@ namespace PerformanceImprovements
             MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
             void MaxBulletHitChanged(float val)
             {
-                MaximumBulletHitParticlesPerFrame.Value = (int)val;
+                MaximumBulletHitParticlesPerFrame = (int)val;
                 SyncOptionsMenus();
             }
-            MenuHandler.CreateSlider("Global maximum number of bullethit particles per frame", menu, 30, 0f, 50f, (float)MaximumBulletHitParticlesPerFrame.Value, MaxBulletHitChanged, out Slider slider, true, color: easyChangeColor);
-            SlidersToSync[MaximumBulletHitParticlesPerFrame].Add(slider);
+            MenuHandler.CreateSlider("Global maximum number of bullethit particles per frame", menu, 30, 0f, 50f, (float)MaximumBulletHitParticlesPerFrame, MaxBulletHitChanged, out Slider slider, true, color: easyChangeColor);
+            SlidersToSync["MaximumBulletHitParticlesPerFrame"].Add(slider);
             MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
             void DisableBulletHitChanged(bool val)
             {
-                DisableBulletHitSurfaceParticleEffects.Value = val;
+                DisableBulletHitSurfaceParticleEffects = val;
                 SyncOptionsMenus();
             }
-            TogglesToSync[DisableBulletHitSurfaceParticleEffects].Add(MenuHandler.CreateToggle(DisableBulletHitSurfaceParticleEffects.Value, "Disable BulletHitSurface particle effects", menu, DisableBulletHitChanged, 30, color: hardChangeColor).GetComponent<Toggle>());
+            TogglesToSync["DisableBulletHitSurfaceParticleEffects"].Add(MenuHandler.CreateToggle(DisableBulletHitSurfaceParticleEffects, "Disable BulletHitSurface particle effects", menu, DisableBulletHitChanged, 30, color: hardChangeColor).GetComponent<Toggle>());
             void DisableBulletHitBulletChanged(bool val)
             {
-                DisableBulletHitBulletParticleEffects.Value = val;
+                DisableBulletHitBulletParticleEffects = val;
                 SyncOptionsMenus();
             }
-            TogglesToSync[DisableBulletHitBulletParticleEffects].Add(MenuHandler.CreateToggle(DisableBulletHitBulletParticleEffects.Value, "Disable BulletHitBullet particle effects", menu, DisableBulletHitBulletChanged, 30, color: hardChangeColor).GetComponent<Toggle>());
+            TogglesToSync["DisableBulletHitBulletParticleEffects"].Add(MenuHandler.CreateToggle(DisableBulletHitBulletParticleEffects, "Disable BulletHitBullet particle effects", menu, DisableBulletHitBulletChanged, 30, color: hardChangeColor).GetComponent<Toggle>());
             MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
             GameObject helpMenu = MenuHandler.CreateMenu("Help", () => { }, menu, 60, true, true, menu.transform.parent.gameObject);
             BulletEffectsOptionsHelp(helpMenu);
@@ -565,41 +803,41 @@ namespace PerformanceImprovements
             
             void ShakeChanged(float val)
             {
-                ScreenShakeStrength.Value = (int)val;
+                ScreenShakeStrength = (int)val;
                 SyncOptionsMenus();
             }
             void AberrationChanged(float val)
             {
-                ChromaticAberrationStrength.Value = (int)val;
+                ChromaticAberrationStrength = (int)val;
                 SyncOptionsMenus();
             }
 
-            MenuHandler.CreateSlider("Screen Shake Strength", menu, 30, 0f, 100f, (int)(ScreenShakeStrength.Value), ShakeChanged, out Slider slider, true);
-            MenuHandler.CreateSlider("Chromatic Aberration Strength", menu, 30, 0f, 100f, (int)(ChromaticAberrationStrength.Value), AberrationChanged, out Slider slider1, true);
-            SlidersToSync[ScreenShakeStrength].Add(slider);
-            SlidersToSync[ChromaticAberrationStrength].Add(slider1);
+            MenuHandler.CreateSlider("Screen Shake Strength", menu, 30, 0f, 100f, (int)(ScreenShakeStrength), ShakeChanged, out Slider slider, true);
+            MenuHandler.CreateSlider("Chromatic Aberration Strength", menu, 30, 0f, 100f, (int)(ChromaticAberrationStrength), AberrationChanged, out Slider slider1, true);
+            SlidersToSync["ScreenShakeStrength"].Add(slider);
+            SlidersToSync["ChromaticAberrationStrength"].Add(slider1);
             void LightShakeChanged(bool val)
             {
-                DisableOverheadLightShake.Value = val;
+                DisableOverheadLightShake = val;
                 CycleArt();
                 SyncOptionsMenus();
             }
-            TogglesToSync[DisableOverheadLightShake].Add(MenuHandler.CreateToggle(DisableOverheadLightShake.Value, "Disable Overhead light shake", menu, LightShakeChanged, 30).GetComponent<Toggle>());
+            TogglesToSync["DisableOverheadLightShake"].Add(MenuHandler.CreateToggle(DisableOverheadLightShake, "Disable Overhead light shake", menu, LightShakeChanged, 30).GetComponent<Toggle>());
 
             MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
             void LightChanged(bool val)
             {
-                DisableOverheadLightAndShadows.Value = val;
+                DisableOverheadLightAndShadows = val;
                 CycleArt();
                 SyncOptionsMenus();
             }
-            TogglesToSync[DisableOverheadLightAndShadows].Add(MenuHandler.CreateToggle(DisableOverheadLightAndShadows.Value, "Disable Overhead light and shadows", menu, LightChanged, 30, color: hardChangeColor).GetComponent<Toggle>());
+            TogglesToSync["DisableOverheadLightAndShadows"].Add(MenuHandler.CreateToggle(DisableOverheadLightAndShadows, "Disable Overhead light and shadows", menu, LightChanged, 30, color: hardChangeColor).GetComponent<Toggle>());
             void RemoveOOBChanged(bool val)
             {
-                RemoveOutOfBoundsBullets.Value = val;
+                RemoveOutOfBoundsBullets = val;
                 SyncOptionsMenus();
             }
-            TogglesToSync[RemoveOutOfBoundsBullets].Add(MenuHandler.CreateToggle(RemoveOutOfBoundsBullets.Value, "Remove out of bounds bullets", menu, RemoveOOBChanged, 30, color: hardChangeColor).GetComponent<Toggle>());
+            TogglesToSync["RemoveOutOfBoundsBullets"].Add(MenuHandler.CreateToggle(RemoveOutOfBoundsBullets, "Remove out of bounds bullets", menu, RemoveOOBChanged, 30, color: hardChangeColor).GetComponent<Toggle>());
             MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
             GameObject helpMenu = MenuHandler.CreateMenu("Help", () => { }, menu, 60, true, true, menu.transform.parent.gameObject);
             MiscellaneousOptionsHelp(helpMenu);
@@ -632,7 +870,7 @@ namespace PerformanceImprovements
 
         internal IEnumerator MapTransitionScalePostFX(float transitionTime)
         {
-            if (!PerformanceImprovements.FixMapLoadLag.Value || PerformanceImprovements.mapTransitionPatchInProgress) { yield break; }
+            if (!PerformanceImprovements.FixMapLoadLag || PerformanceImprovements.mapTransitionPatchInProgress) { yield break; }
 
             PerformanceImprovements.mapTransitionPatchInProgress = true;
 

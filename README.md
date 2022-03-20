@@ -9,6 +9,13 @@ Special thanks to Ascyst for the help.
 
 This mod supplants RemovePostFX and ReducePostFX.
 
+### New in v0.1.0
+-----------------
+
+- New option to fix extreme framerate stuttering when any controller input was made
+
+- Options are now bound to player preferences instead of BepInEx configuration. This means that settings now save across profiles, so no need to set everything back up each time you make a new modding profile.
+
 ### New in v0.0.2
 -----------------
 

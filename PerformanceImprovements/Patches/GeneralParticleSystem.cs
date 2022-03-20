@@ -20,10 +20,10 @@ namespace PerformanceImprovements.Patches
 
         private static bool Prefix(GeneralParticleSystem __instance)
         {
-            if (PerformanceImprovements.DisableCardParticleAnimations.Value && PerformanceImprovements.GameInProgress && __instance?.gameObject?.transform?.parent?.GetComponentInChildren<TextMeshProUGUI>() == null)
+            if (PerformanceImprovements.DisableCardParticleAnimations && PerformanceImprovements.GameInProgress && __instance?.gameObject?.transform?.parent?.GetComponentInChildren<TextMeshProUGUI>() == null)
             {
                 __instance.InvokeMethod("Init", new object[] { });
-				int num = (int)UnityEngine.Mathf.Clamp(15, 0, PerformanceImprovements.NumberOfGeneralParticles.Value);
+				int num = (int)UnityEngine.Mathf.Clamp(15, 0, PerformanceImprovements.NumberOfGeneralParticles);
 				for (int i = 0; i < num; i++)
                 {
 					CreateParticleStatic(__instance, i/__instance.duration);
@@ -134,7 +134,7 @@ namespace PerformanceImprovements.Patches
         {
 			if (PerformanceImprovements.GameInProgress)
             {
-				initSpawn = (int)UnityEngine.Mathf.Clamp(initSpawn, 0f, PerformanceImprovements.NumberOfGeneralParticles.Value);
+				initSpawn = (int)UnityEngine.Mathf.Clamp(initSpawn, 0f, PerformanceImprovements.NumberOfGeneralParticles);
 			}
 		}
     }

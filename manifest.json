@@ -1,10 +1,10 @@
 {
     "name": "Performance_Improvements",
-    "version_number": "0.0.2",
+    "version_number": "0.1.0",
     "website_url": "https://github.com/Rounds-Modding/PerformanceImprovements",
     "description": "Lots of options to improve performance and stability",
     "dependencies": [
-        "willis81808-UnboundLib-2.10.2",
+        "willis81808-UnboundLib-2.11.1",
 	"willis81808-MMHook-1.0.0",
 	"BepInEx-BepInExPack_ROUNDS-5.4.1100"
     ]

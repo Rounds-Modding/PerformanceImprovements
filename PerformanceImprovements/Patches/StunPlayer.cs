@@ -10,7 +10,7 @@ namespace PerformanceImprovements.Patches
         // skip StunPlayer.Go if it will throw a null reference exception
         private static bool Prefix(StunPlayer __instance)
         {
-            return (!PerformanceImprovements.FixStunPlayer.Value || __instance.GetComponentInParent<Player>() != null);
+            return (!PerformanceImprovements.FixStunPlayer || __instance.GetComponentInParent<Player>() != null);
         }
     }
 }

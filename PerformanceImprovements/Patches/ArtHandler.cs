@@ -45,38 +45,38 @@ namespace PerformanceImprovements.Patches
 			foreach (ParticleSystem particleSystem in UnityEngine.Object.FindObjectsOfType<ParticleSystem>())
 			{
 				ParticleSystem.MainModule main = particleSystem.main;
-				main.maxParticles = (int)PerformanceImprovements.MaxNumberOfParticles.Value;
+				main.maxParticles = (int)PerformanceImprovements.MaxNumberOfParticles;
 			}
 			foreach (Player player in PlayerManager.instance.players)
             {
 
-				((ParticleSystem)player.gameObject.GetComponentInChildren<PlayerSkinParticle>().GetFieldValue("part")).enableEmission = !PerformanceImprovements.DisablePlayerParticles.Value;
+				((ParticleSystem)player.gameObject.GetComponentInChildren<PlayerSkinParticle>().GetFieldValue("part")).enableEmission = !PerformanceImprovements.DisablePlayerParticles;
 
 				Gun gun = player.GetComponent<Holding>().holdable.GetComponent<Gun>();
 				GameObject spring = gun.gameObject.transform.GetChild(1).gameObject;
 				GameObject handle = spring.transform.GetChild(2).gameObject;
 				GameObject barrel = spring.transform.GetChild(3).gameObject;
 
-				handle.GetComponent<SpriteMask>().enabled = !PerformanceImprovements.DisablePlayerParticles.Value;
-				handle.GetComponent<SpriteRenderer>().enabled = PerformanceImprovements.DisablePlayerParticles.Value;
+				handle.GetComponent<SpriteMask>().enabled = !PerformanceImprovements.DisablePlayerParticles;
+				handle.GetComponent<SpriteRenderer>().enabled = PerformanceImprovements.DisablePlayerParticles;
 				handle.GetComponent<SpriteRenderer>().color = PerformanceImprovements.staticGunColor;
-				barrel.GetComponent<SpriteMask>().enabled = !PerformanceImprovements.DisablePlayerParticles.Value;
-				barrel.GetComponent<SpriteRenderer>().enabled = PerformanceImprovements.DisablePlayerParticles.Value;
+				barrel.GetComponent<SpriteMask>().enabled = !PerformanceImprovements.DisablePlayerParticles;
+				barrel.GetComponent<SpriteRenderer>().enabled = PerformanceImprovements.DisablePlayerParticles;
 				barrel.GetComponent<SpriteRenderer>().color = PerformanceImprovements.staticGunColor;
 
 			}
-			BackParticles?.SetActive(!PerformanceImprovements.DisableBackgroundParticles.Value);
-			FrontParticles?.SetActive(!PerformanceImprovements.DisableMapParticles.Value);
-			Light?.SetActive(!PerformanceImprovements.DisableOverheadLightAndShadows.Value);
+			BackParticles?.SetActive(!PerformanceImprovements.DisableBackgroundParticles);
+			FrontParticles?.SetActive(!PerformanceImprovements.DisableMapParticles);
+			Light?.SetActive(!PerformanceImprovements.DisableOverheadLightAndShadows);
 			if (Light && Light.GetComponent<Screenshaker>())
 			{
-				Light.GetComponentInChildren<Screenshaker>().enabled = !PerformanceImprovements.DisableOverheadLightShake.Value;
+				Light.GetComponentInChildren<Screenshaker>().enabled = !PerformanceImprovements.DisableOverheadLightShake;
 			}
-			if ((bool)BackParticles?.activeSelf && PerformanceImprovements.DisableBackgroundParticleAnimations.Value)
+			if ((bool)BackParticles?.activeSelf && PerformanceImprovements.DisableBackgroundParticleAnimations)
 			{
 				PerformanceImprovements.instance.StartCoroutine(InitParticles(BackParticles?.GetComponentsInChildren<ParticleSystem>()));
 			}
-			if ((bool)FrontParticles?.activeSelf && PerformanceImprovements.DisableForegroundParticleAnimations.Value)
+			if ((bool)FrontParticles?.activeSelf && PerformanceImprovements.DisableForegroundParticleAnimations)
 			{
 				PerformanceImprovements.instance.StartCoroutine(InitParticles(FrontParticles?.GetComponentsInChildren<ParticleSystem>()));
 			}

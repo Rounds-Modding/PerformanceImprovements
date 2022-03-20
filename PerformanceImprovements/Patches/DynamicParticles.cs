@@ -10,7 +10,7 @@ namespace PerformanceImprovements.Patches
     {
         private static bool Prefix(DynamicParticles __instance, float damage, Transform spawnerTransform, HitInfo hit, Color projectielColor, ref int ___spawnsThisFrame)
         {
-			if (PerformanceImprovements.DisableBulletHitSurfaceParticleEffects.Value || (float)___spawnsThisFrame > PerformanceImprovements.MaximumBulletHitParticlesPerFrame.Value || PerformanceImprovements.hitEffectsSpawnedThisFrame >= PerformanceImprovements.MaximumBulletHitParticlesPerFrame.Value)
+			if (PerformanceImprovements.DisableBulletHitSurfaceParticleEffects || (float)___spawnsThisFrame > PerformanceImprovements.MaximumBulletHitParticlesPerFrame || PerformanceImprovements.hitEffectsSpawnedThisFrame >= PerformanceImprovements.MaximumBulletHitParticlesPerFrame)
 			{
 				return false;
 			}
@@ -24,7 +24,7 @@ namespace PerformanceImprovements.Patches
 				num2++;
 			}
 			GameObject[] array = ObjectsToSpawn.SpawnObject(__instance.transform, hit, __instance.bulletHit[num].objectsToSpawn, null, null, 55f, null, false);
-			if (PerformanceImprovements.FixBulletHitParticleEffects.Value)
+			if (PerformanceImprovements.FixBulletHitParticleEffects)
             {
 				foreach (GameObject obj in array)
                 {

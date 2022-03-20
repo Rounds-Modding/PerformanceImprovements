@@ -11,7 +11,7 @@ namespace PerformanceImprovements.Patches
     {
         private static void Postfix(CardChoiceVisuals __instance, GameObject ___currentSkin)
         {
-            if (___currentSkin?.GetComponentInChildren<ParticleSystem>() != null && (PerformanceImprovements.DisablePlayerParticles.Value || PerformanceImprovements.DisableForegroundParticleAnimations.Value))
+            if (___currentSkin?.GetComponentInChildren<ParticleSystem>() != null && (PerformanceImprovements.DisablePlayerParticles || PerformanceImprovements.DisableForegroundParticleAnimations))
             {
                 ___currentSkin.GetComponentInChildren<ParticleSystem>().Pause();
             }

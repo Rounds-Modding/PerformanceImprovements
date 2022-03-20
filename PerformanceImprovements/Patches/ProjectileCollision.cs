@@ -30,12 +30,12 @@ namespace PerformanceImprovements.Patches
             RaycastHit2D raycastHit2D = default(RaycastHit2D);
             raycastHit2D.normal = -__instance.transform.root.forward;
             raycastHit2D.point = __instance.transform.position;
-            if (!PerformanceImprovements.DisableBulletHitBulletParticleEffects.Value && !(PerformanceImprovements.hitEffectsSpawnedThisFrame >= PerformanceImprovements.MaximumBulletHitParticlesPerFrame.Value))
+            if (!PerformanceImprovements.DisableBulletHitBulletParticleEffects && !(PerformanceImprovements.hitEffectsSpawnedThisFrame >= PerformanceImprovements.MaximumBulletHitParticlesPerFrame))
             {
                 PerformanceImprovements.hitEffectsSpawnedThisFrame++;
                 GameObject spark = GameObject.Instantiate<GameObject>(__instance.sparkObject, __instance.transform.position, __instance.transform.rotation);
                 spark.transform.localScale = Vector3.one * ((___startDMG / 55f + 1f) * 0.5f);
-                if (PerformanceImprovements.FixBulletHitParticleEffects.Value)
+                if (PerformanceImprovements.FixBulletHitParticleEffects)
                 {
                     spark.AddComponent<RemoveAfterPoint>();
                     RemoveAfterSeconds rem = spark.GetComponent<RemoveAfterSeconds>();

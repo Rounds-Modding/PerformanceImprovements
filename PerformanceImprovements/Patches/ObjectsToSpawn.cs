@@ -12,7 +12,7 @@ namespace PerformanceImprovements.Patches
     {
         private static void Postfix(ref GameObject[] __result)
         {
-            if (PerformanceImprovements.FixProjectileObjectsToSpawn.Value)
+            if (PerformanceImprovements.FixProjectileObjectsToSpawn)
             {
                 foreach (GameObject obj in __result)
                 {
@@ -28,7 +28,7 @@ namespace PerformanceImprovements.Patches
     {
         private static bool Prefix(ObjectsToSpawn objectToSpawn, Vector3 position,  Quaternion rotation)
         {
-            if (PerformanceImprovements.FixProjectileObjectsToSpawn.Value)
+            if (PerformanceImprovements.FixProjectileObjectsToSpawn)
             {
                 for (int i = 0; i < objectToSpawn.numberOfSpawns; i++)
                 {

@@ -9,11 +9,11 @@ namespace PerformanceImprovements.Patches
     {
         private static void Postfix(ChangeColor __instance)
         {
-            if (PerformanceImprovements.DisableBulletHitSurfaceParticleEffects.Value)
+            if (PerformanceImprovements.DisableBulletHitSurfaceParticleEffects)
             {
                 if (__instance != null && __instance.gameObject != null) { UnityEngine.GameObject.Destroy(__instance.gameObject); }
             }
-            else if (PerformanceImprovements.FixBulletHitParticleEffects.Value)
+            else if (PerformanceImprovements.FixBulletHitParticleEffects)
             {
                 if (__instance!= null && __instance.gameObject!=null)
                 {
