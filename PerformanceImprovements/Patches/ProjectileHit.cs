@@ -36,7 +36,7 @@ namespace PerformanceImprovements.Patches
 
         private static void TryDestroy(ProjectileHit __instance)
         {
-            if (__instance != null && __instance.gameObject != null) { UnityEngine.GameObject.Destroy(__instance.gameObject); }
+            if (__instance != null && __instance.gameObject != null && __instance.ownPlayer.data.view.IsMine) { Photon.Pun.PhotonNetwork.Destroy(__instance.gameObject); }
         }
 
         private static void Prefix(ProjectileHit __instance)
