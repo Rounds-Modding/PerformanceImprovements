@@ -21,7 +21,7 @@ using PerformanceImprovements.Patches;
 namespace PerformanceImprovements
 {
     [BepInDependency("com.willis.rounds.unbound", BepInDependency.DependencyFlags.HardDependency)]
-    [BepInPlugin(ModId, ModName, "0.1.1")]
+    [BepInPlugin(ModId, ModName, "0.2.0")]
     [BepInProcess("Rounds.exe")]
     public class PerformanceImprovements : BaseUnityPlugin
     {
@@ -99,6 +99,39 @@ namespace PerformanceImprovements
             PlayerPrefs.SetFloat(ConfigKey(name), value);
         }
 
+        public static bool AdaptivePerformance
+        {
+            get
+            {
+                return GetBool("AdaptivePerformance", false);
+            }
+            set
+            {
+                SetBool("AdaptivePerformance", value);
+            }
+        }
+        public static bool AdaptiveOverrideScreenShake
+        {
+            get
+            {
+                return GetBool("AdaptiveOverrideScreenShake", false);
+            }
+            set
+            {
+                SetBool("AdaptiveOverrideScreenShake", value);
+            }
+        }
+        public static bool AdaptiveOverrideChromaticAberration
+        {
+            get
+            {
+                return GetBool("AdaptiveOverrideChromaticAberration", false);
+            }
+            set
+            {
+                SetBool("AdaptiveOverrideChromaticAberration", value);
+            }
+        }
         public static bool DisableCardParticleAnimations
         {
             get
@@ -333,8 +366,18 @@ namespace PerformanceImprovements
 
         internal static Dictionary<string, List<Toggle>> TogglesToSync = new Dictionary<string, List<Toggle>>();
         internal static Dictionary<string, List<Slider>> SlidersToSync = new Dictionary<string, List<Slider>>();
+        internal static List<GameObject> adaptiveEnabledWarnings = new List<GameObject>();
+        internal static List<float> frameTimeHistory = new List<float>();
+        internal float lastAdaptiveUpdateTime = 0f, adaptiveUpdateInterval = 3f, framesToAverage = 240f;
 
         public static PerformanceImprovements instance;
+        
+        private enum AdaptivePresetLevel
+        {
+            NONE, BETTER, HIGH, MAX
+        }
+        private AdaptivePresetLevel currentAdaptiveLevel = AdaptivePresetLevel.NONE;
+
         private PerformanceImprovements()
         {
             instance = this;
@@ -392,15 +435,100 @@ namespace PerformanceImprovements
             On.ChomaticAberrationFeeler.OnGameFeel += this.ChomaticAberrationFeeler_OnGameFeel;
         }
 
+        void Update()
+        {
+            if (!AdaptivePerformance) return;
+
+            // track frame times
+            frameTimeHistory.Add(Time.deltaTime);
+            while (frameTimeHistory.Count > framesToAverage)
+            {
+                frameTimeHistory.RemoveAt(0);
+            }
+
+            // calculate fps
+            var fps = frameTimeHistory.Count / frameTimeHistory.Sum();
+
+            // set adaptive performance preset
+            if (fps > 50)
+            {
+                UnityEngine.Debug.Log("\n[PerformanceImprovements] Detected high FPS");
+                SetAdaptiveLevel(AdaptivePresetLevel.NONE);
+            }
+            else if (fps > 30)
+            {
+                UnityEngine.Debug.Log("\n[PerformanceImprovements] Detected FPS fell below 50");
+                SetAdaptiveLevel(AdaptivePresetLevel.BETTER);
+            }
+            else if (fps > 20)
+            {
+                UnityEngine.Debug.Log("\n[PerformanceImprovements] Detected FPS fell below 30");
+                SetAdaptiveLevel(AdaptivePresetLevel.HIGH);
+            }
+            else
+            {
+                UnityEngine.Debug.Log("\n[PerformanceImprovements] Detected FPS fell below 20");
+                SetAdaptiveLevel(AdaptivePresetLevel.MAX);
+            }
+        }
+
+        private void SetAdaptiveLevel(AdaptivePresetLevel targetLevel)
+        {
+            if (currentAdaptiveLevel == targetLevel || Time.time - lastAdaptiveUpdateTime < adaptiveUpdateInterval) return;
+
+            switch (targetLevel)
+            {
+                case AdaptivePresetLevel.NONE:
+                    OnlyBugFixPreset(AdaptiveOverrideScreenShake, AdaptiveOverrideChromaticAberration);
+                    break;
+                case AdaptivePresetLevel.BETTER:
+                    BetterPerformancePreset(AdaptiveOverrideScreenShake, AdaptiveOverrideChromaticAberration);
+                    break;
+                case AdaptivePresetLevel.HIGH:
+                    HighPerformancePreset(AdaptiveOverrideScreenShake, AdaptiveOverrideChromaticAberration);
+                    break;
+                case AdaptivePresetLevel.MAX:
+                    MaxPerformancePreset(AdaptiveOverrideScreenShake, AdaptiveOverrideChromaticAberration);
+                    break;
+            }
+
+            UnityEngine.Debug.Log(
+                $"[PerformanceImprovements] Auto-set preset to {targetLevel}\n" +
+                $"[PerformanceImprovements] Override Screen Shake: {AdaptiveOverrideScreenShake}\n" +
+                $"[PerformanceImprovements] Override Chromatic Aberration: {AdaptiveOverrideChromaticAberration}\n");
+
+            currentAdaptiveLevel = targetLevel;
+            lastAdaptiveUpdateTime = Time.time;
+        }
+
+        private static void CreateAdaptiveActiveWarning(GameObject menu)
+        {
+            MenuHandler.CreateText("Adaptive Performance is enabled! Manual changes may not be respected", menu, out TextMeshProUGUI warning, 45, false, color: hardChangeColor);
+            MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
+            adaptiveEnabledWarnings.Add(warning.gameObject);
+        }
+
+        private static void ToggleAdaptiveWarningEnabled()
+        {
+            var enabled = AdaptivePerformance;
+            adaptiveEnabledWarnings.RemoveAll(go => go == null);
+            foreach (var warning in adaptiveEnabledWarnings)
+            {
+                warning.SetActive(enabled);
+            }
+        }
+
         void LateUpdate()
         {
             hitEffectsSpawnedThisFrame = 0;
         }
+
         private static IEnumerator SetBattleInProgress(bool inProgress)
         {
             PerformanceImprovements.BattleInProgress = inProgress;
             yield break;
         }
+
         private static IEnumerator SetGameInProgress(bool inProgress)
         {
             if (inProgress) { PerformanceImprovements.instance.PostFXDampening = 1f; }
@@ -434,7 +562,7 @@ namespace PerformanceImprovements
             CycleArt();
             SyncOptionsMenus();
     }
-        private static void OnlyBugFixPreset()
+        private static void OnlyBugFixPreset(bool overrideShake = true, bool overrideChromatic = true)
         {
             DisableCardParticleAnimations = false;
             NumberOfGeneralParticles = 100;
@@ -442,8 +570,14 @@ namespace PerformanceImprovements
             DisableMapParticles = false;
             DisableBackgroundParticles = false;
             DisableOverheadLightAndShadows = false;
-            ScreenShakeStrength = 100;
-            ChromaticAberrationStrength = 100;
+            if (overrideShake)
+            {
+                ScreenShakeStrength = 100;
+            }
+            if (overrideChromatic)
+            {
+                ChromaticAberrationStrength = 100;
+            }
             DisableOverheadLightShake = false;
             DisableBackgroundParticleAnimations = false;
             DisableForegroundParticleAnimations = false;
@@ -460,7 +594,7 @@ namespace PerformanceImprovements
             CycleArt();
             SyncOptionsMenus();
         }
-        private static void BetterPerformancePreset()
+        private static void BetterPerformancePreset(bool overrideShake = true, bool overrideChromatic = true)
         {
             DisableCardParticleAnimations = false;
             NumberOfGeneralParticles = 20;
@@ -468,8 +602,14 @@ namespace PerformanceImprovements
             DisableMapParticles = false;
             DisableBackgroundParticles = false;
             DisableOverheadLightAndShadows = false;
-            ScreenShakeStrength = 100;
-            ChromaticAberrationStrength = 100;
+            if (overrideShake)
+            {
+                ScreenShakeStrength = 100;
+            }
+            if (overrideChromatic)
+            {
+                ChromaticAberrationStrength = 100;
+            }
             DisableOverheadLightShake = false;
             DisableBackgroundParticleAnimations = false;
             DisableForegroundParticleAnimations = false;
@@ -486,7 +626,7 @@ namespace PerformanceImprovements
             CycleArt();
             SyncOptionsMenus();
         }
-        private static void HighPerformancePreset()
+        private static void HighPerformancePreset(bool overrideShake = true, bool overrideChromatic = true)
         {
             DisableCardParticleAnimations = true;
             NumberOfGeneralParticles = 20;
@@ -494,8 +634,14 @@ namespace PerformanceImprovements
             DisableMapParticles = false;
             DisableBackgroundParticles = false;
             DisableOverheadLightAndShadows = false;
-            ScreenShakeStrength = 50;
-            ChromaticAberrationStrength = 50;
+            if (overrideShake)
+            {
+                ScreenShakeStrength = 50;
+            }
+            if (overrideChromatic)
+            {
+                ChromaticAberrationStrength = 50;
+            }
             DisableOverheadLightShake = false;
             DisableBackgroundParticleAnimations = true;
             DisableForegroundParticleAnimations = true;
@@ -512,7 +658,7 @@ namespace PerformanceImprovements
             CycleArt();
             SyncOptionsMenus();
         }
-        private static void MaxPerformancePreset()
+        private static void MaxPerformancePreset(bool overrideShake = true, bool overrideChromatic = true)
         {
             DisableCardParticleAnimations = true;
             NumberOfGeneralParticles = 10;
@@ -520,8 +666,14 @@ namespace PerformanceImprovements
             DisableMapParticles = true;
             DisableBackgroundParticles = true;
             DisableOverheadLightAndShadows = true;
-            ScreenShakeStrength = 0;
-            ChromaticAberrationStrength = 0;
+            if (overrideShake)
+            {
+                ScreenShakeStrength = 0;
+            }
+            if (overrideChromatic)
+            {
+                ChromaticAberrationStrength = 0;
+            }
             DisableOverheadLightShake = true;
             DisableBackgroundParticleAnimations = true;
             DisableForegroundParticleAnimations = true;
@@ -595,31 +747,43 @@ namespace PerformanceImprovements
 
             MenuHandler.CreateText(ModName + " Options", menu, out TextMeshProUGUI _, 60);
             MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
-            GameObject particleMenu = MenuHandler.CreateMenu("Particle Effects", () => { }, menu, 60, true, true, menu.transform.parent.gameObject);
+            GameObject adaptiveMenu = MenuHandler.CreateMenu("Adaptive Mode", () => { }, menu, 60, true, true, menu.transform.parent.gameObject);
+            AdaptiveMenu(adaptiveMenu);
+            GameObject particleMenu = MenuHandler.CreateMenu("Particle Effects", ToggleAdaptiveWarningEnabled, menu, 60, true, true, menu.transform.parent.gameObject);
             ParticleOptionsMenu(particleMenu);
-            GameObject fixMenu = MenuHandler.CreateMenu("Bug Fixes", () => { }, menu, 60, true, true, menu.transform.parent.gameObject);
+            GameObject fixMenu = MenuHandler.CreateMenu("Bug Fixes", ToggleAdaptiveWarningEnabled, menu, 60, true, true, menu.transform.parent.gameObject);
             FixOptionsMenu(fixMenu);
-            GameObject bulletMenu = MenuHandler.CreateMenu("Bullet Effects", () => { }, menu, 60, true, true, menu.transform.parent.gameObject);
+            GameObject bulletMenu = MenuHandler.CreateMenu("Bullet Effects", ToggleAdaptiveWarningEnabled, menu, 60, true, true, menu.transform.parent.gameObject);
             BulletEffectsOptionsMenu(bulletMenu);
-            GameObject miscMenu = MenuHandler.CreateMenu("Miscellaneous", () => { }, menu, 60, true, true, menu.transform.parent.gameObject);
+            GameObject miscMenu = MenuHandler.CreateMenu("Miscellaneous", ToggleAdaptiveWarningEnabled, menu, 60, true, true, menu.transform.parent.gameObject);
             MiscellaneousOptionsMenu(miscMenu);
             MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
-            GameObject presetMenu = MenuHandler.CreateMenu("Presets", () => { }, menu, 60, true, true, menu.transform.parent.gameObject);
+            GameObject presetMenu = MenuHandler.CreateMenu("Presets", ToggleAdaptiveWarningEnabled, menu, 60, true, true, menu.transform.parent.gameObject);
             PresetsMenu(presetMenu);
             MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
-            GameObject helpMenu = MenuHandler.CreateMenu("Help", () => { }, menu, 60, true, true, menu.transform.parent.gameObject);
+            GameObject helpMenu = MenuHandler.CreateMenu("Help", ToggleAdaptiveWarningEnabled, menu, 60, true, true, menu.transform.parent.gameObject);
             GeneralHelpMenu(helpMenu);
-
-
+        }
+        private static void AdaptiveMenu(GameObject menu)
+        {
+            MenuHandler.CreateText("Adaptive Performance Options", menu, out TextMeshProUGUI _, 60);
+            MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
+            MenuHandler.CreateText("<b>Adaptive performance mode will monitor your FPS and automatically change your performance presets when it falls below the given thresholds.\nNOTE: While enabled manual changes to most settings will be overwritten!</b>", menu, out TextMeshProUGUI _, 45, false, color: hardChangeColor);
+            MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
+            MenuHandler.CreateToggle(AdaptivePerformance, "Adaptive Mode Active", menu, val => AdaptivePerformance = val, 60, color: hardChangeColor);
+            MenuHandler.CreateToggle(AdaptiveOverrideScreenShake, "Prevent Overriding Screen Shake", menu, val => AdaptiveOverrideScreenShake = !val, 60, color: easyChangeColor);
+            MenuHandler.CreateToggle(AdaptiveOverrideChromaticAberration, "Prevent Overriding Chromatic Aberration", menu, val => AdaptiveOverrideChromaticAberration = !val, 60, color: easyChangeColor);
         }
         private static void PresetsMenu(GameObject menu)
         {
+            CreateAdaptiveActiveWarning(menu);
+
             MenuHandler.CreateButton("Vanilla", menu, VanillaPreset, 60, color: easyChangeColor);
-            MenuHandler.CreateButton("Only Bug Fixes", menu, OnlyBugFixPreset, 60, color: easyChangeColor);
+            MenuHandler.CreateButton("Only Bug Fixes", menu, () => OnlyBugFixPreset(), 60, color: easyChangeColor);
             MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
-            MenuHandler.CreateButton("Better Performance", menu, BetterPerformancePreset, 60, color: easyChangeColor);
-            MenuHandler.CreateButton("High Performance", menu, HighPerformancePreset, 60);
-            MenuHandler.CreateButton("Maximum Performance", menu, MaxPerformancePreset, 60, color: hardChangeColor);
+            MenuHandler.CreateButton("Better Performance", menu, () => BetterPerformancePreset(), 60, color: easyChangeColor);
+            MenuHandler.CreateButton("High Performance", menu, () => HighPerformancePreset(), 60);
+            MenuHandler.CreateButton("Maximum Performance", menu, () => MaxPerformancePreset(), 60, color: hardChangeColor);
             MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
         }
         private static void GeneralHelpMenu(GameObject menu)
@@ -635,6 +799,8 @@ namespace PerformanceImprovements
 
         private static void ParticleOptionsMenu(GameObject menu)
         {
+            CreateAdaptiveActiveWarning(menu);
+
             MenuHandler.CreateText("Particle Effects Options", menu, out TextMeshProUGUI _, 60);
             MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
             void MaxParticlesChanged(float val)
@@ -715,6 +881,8 @@ namespace PerformanceImprovements
         }
         private static void FixOptionsMenu(GameObject menu)
         {
+            CreateAdaptiveActiveWarning(menu);
+
             MenuHandler.CreateText("Bug Fixes Options", menu, out TextMeshProUGUI _, 60);
             MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
             void FixObjToSpawnChanged(bool val)
@@ -763,6 +931,8 @@ namespace PerformanceImprovements
         }
         private static void BulletEffectsOptionsMenu(GameObject menu)
         {
+            CreateAdaptiveActiveWarning(menu);
+
             MenuHandler.CreateText("Bullet Effects Options", menu, out TextMeshProUGUI _, 60);
             MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
             void MaxBulletHitChanged(float val)
@@ -798,6 +968,8 @@ namespace PerformanceImprovements
 
         private static void MiscellaneousOptionsMenu(GameObject menu)
         {
+            CreateAdaptiveActiveWarning(menu);
+
             MenuHandler.CreateText("Miscellaneous Options", menu, out TextMeshProUGUI _, 60);
             MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
             
