@@ -452,22 +452,18 @@ namespace PerformanceImprovements
             // set adaptive performance preset
             if (fps > 50)
             {
-                UnityEngine.Debug.Log("\n[PerformanceImprovements] Detected high FPS");
                 SetAdaptiveLevel(AdaptivePresetLevel.NONE);
             }
             else if (fps > 30)
             {
-                UnityEngine.Debug.Log("\n[PerformanceImprovements] Detected FPS fell below 50");
                 SetAdaptiveLevel(AdaptivePresetLevel.BETTER);
             }
             else if (fps > 20)
             {
-                UnityEngine.Debug.Log("\n[PerformanceImprovements] Detected FPS fell below 30");
                 SetAdaptiveLevel(AdaptivePresetLevel.HIGH);
             }
             else
             {
-                UnityEngine.Debug.Log("\n[PerformanceImprovements] Detected FPS fell below 20");
                 SetAdaptiveLevel(AdaptivePresetLevel.MAX);
             }
         }
@@ -479,15 +475,19 @@ namespace PerformanceImprovements
             switch (targetLevel)
             {
                 case AdaptivePresetLevel.NONE:
+                    UnityEngine.Debug.Log("\n[PerformanceImprovements] Detected high FPS");
                     OnlyBugFixPreset(AdaptiveOverrideScreenShake, AdaptiveOverrideChromaticAberration);
                     break;
                 case AdaptivePresetLevel.BETTER:
+                    UnityEngine.Debug.Log("\n[PerformanceImprovements] Detected FPS fell below 50");
                     BetterPerformancePreset(AdaptiveOverrideScreenShake, AdaptiveOverrideChromaticAberration);
                     break;
                 case AdaptivePresetLevel.HIGH:
+                    UnityEngine.Debug.Log("\n[PerformanceImprovements] Detected FPS fell below 30");
                     HighPerformancePreset(AdaptiveOverrideScreenShake, AdaptiveOverrideChromaticAberration);
                     break;
                 case AdaptivePresetLevel.MAX:
+                    UnityEngine.Debug.Log("\n[PerformanceImprovements] Detected FPS fell below 20");
                     MaxPerformancePreset(AdaptiveOverrideScreenShake, AdaptiveOverrideChromaticAberration);
                     break;
             }
