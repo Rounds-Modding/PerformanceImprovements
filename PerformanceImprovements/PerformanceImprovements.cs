@@ -368,7 +368,7 @@ namespace PerformanceImprovements
         internal static Dictionary<string, List<Slider>> SlidersToSync = new Dictionary<string, List<Slider>>();
         internal static List<GameObject> adaptiveEnabledWarnings = new List<GameObject>();
         internal static List<float> frameTimeHistory = new List<float>();
-        internal float lastAdaptiveUpdateTime = 0f, adaptiveUpdateInterval = 3f, framesToAverage = 240f;
+        internal float lastAdaptiveUpdateTime = 0f, adaptiveUpdateInterval = 1f, secondsToAverage = 2f;
 
         public static PerformanceImprovements instance;
         
@@ -441,7 +441,7 @@ namespace PerformanceImprovements
 
             // track frame times
             frameTimeHistory.Add(Time.deltaTime);
-            while (frameTimeHistory.Count > framesToAverage)
+            while (frameTimeHistory.Sum() > secondsToAverage)
             {
                 frameTimeHistory.RemoveAt(0);
             }
@@ -450,26 +450,32 @@ namespace PerformanceImprovements
             var fps = frameTimeHistory.Count / frameTimeHistory.Sum();
 
             // set adaptive performance preset
-            if (fps > 50)
+            if (fps > 60)
             {
-                SetAdaptiveLevel(AdaptivePresetLevel.NONE);
+                StepLevelDown();
             }
-            else if (fps > 30)
+            else if (fps < 30)
             {
-                SetAdaptiveLevel(AdaptivePresetLevel.BETTER);
+                StepLevelUp();
             }
-            else if (fps > 20)
-            {
-                SetAdaptiveLevel(AdaptivePresetLevel.HIGH);
-            }
-            else
-            {
-                SetAdaptiveLevel(AdaptivePresetLevel.MAX);
-            }
+        }
+
+        private void StepLevelUp()
+        {
+            SetAdaptiveLevel(currentAdaptiveLevel + 1);
+        }
+
+        private void StepLevelDown()
+        {
+            SetAdaptiveLevel(currentAdaptiveLevel - 1);
         }
 
         private void SetAdaptiveLevel(AdaptivePresetLevel targetLevel)
         {
+            // exit if enum passed is outside of the defined range
+            if (!Enum.IsDefined(typeof(AdaptivePresetLevel), targetLevel)) return;
+
+            // exit if we are already at the target level or not enough time has elapsed
             if (currentAdaptiveLevel == targetLevel || Time.time - lastAdaptiveUpdateTime < adaptiveUpdateInterval) return;
 
             switch (targetLevel)
